@@ -14,20 +14,24 @@ interface Question {
 interface QuestionTableProps {
     questions: Question[];
     difficultyFilter: string;  // This will come from FilterBar.tsx
+    selectedTopics: string[]; // This will come from the TopicSelector
 }
 
-const QuestionTable = ({ questions, difficultyFilter }: QuestionTableProps) => {
+const QuestionTable = ({ questions, difficultyFilter, selectedTopics }: QuestionTableProps) => {
     const [checked, setChecked] = useState<number[]>([]);
     const [bookmarked, setBookmarked] = useState<number[]>([]);
     const [sortBy, setSortBy] = useState<"acceptanceRate" | "frequency" | null>(null);
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-    // 🧠 Step 1: Filter by difficulty
+    // 🧠 Step 1: Filter by difficulty and selected topics
     const filteredQuestions = useMemo(() => {
-        return questions.filter((q) =>
-            difficultyFilter ? q.difficulty.toLowerCase() === difficultyFilter.toLowerCase() : true
-        );
-    }, [questions, difficultyFilter]);
+        return questions.filter((q) => {
+            const matchesDifficulty = difficultyFilter ? q.difficulty.toLowerCase() === difficultyFilter.toLowerCase() : true;
+            const matchesTopics = (Array.isArray(selectedTopics) && selectedTopics.length === 0) ||
+                selectedTopics.some(topic => q.topicTag.split(",").map(tag => tag.trim()).includes(topic));
+            return matchesDifficulty && matchesTopics;
+        });
+    }, [questions, difficultyFilter, selectedTopics]);
 
     // ✅ Step 2: Compute stats based on filtered questions
     const filteredChecked = filteredQuestions.filter((q) => checked.includes(q.id));
@@ -157,9 +161,22 @@ const QuestionTable = ({ questions, difficultyFilter }: QuestionTableProps) => {
                         <td className={`px-4 py-3 font-semibold ${getDifficultyColor(q.difficulty)}`}>
                             {q.difficulty}
                         </td>
-
+                        {/* frequency placeholder */}
                         <td className="px-4 py-3">{q.frequency}</td>
-                        <td className="px-4 py-3">{q.topicTag}</td>
+                        {/* Topic placeholder */}
+                        <td className="px-4 py-3">
+                            {q.topicTag.split(",").map((topic, index) => {
+                                const isSelected = selectedTopics.includes(topic.trim());
+                                return (
+                                    <span
+                                        key={index}
+                                        className={`inline-block px-2 py-1 mr-2 mb-2 text-sm text-white rounded-md ${isSelected ? 'bg-blue-500' : 'bg-zinc-700'}`}
+                                    >
+                {topic.trim()}
+            </span>
+                                );
+                            })}
+                        </td>
 
                         <td className="px-4 py-3 text-center">
                             <input
@@ -179,13 +196,7 @@ const QuestionTable = ({ questions, difficultyFilter }: QuestionTableProps) => {
                         <td className="px-4 py-3 text-center">
                             <button onClick={() => toggleBookmark(q.id)}>
                                 <Star
-                                    size={18}
-                                    className={
-                                        bookmarked.includes(q.id)
-                                            ? "text-yellow-400 fill-yellow-400"
-                                            : "text-zinc-500"
-                                    }
-                                />
+                                    className={`text-yellow-400 ${bookmarked.includes(q.id) ? "fill-yellow-400" : ""}`}/>
                             </button>
                         </td>
                     </tr>

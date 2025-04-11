@@ -11,8 +11,6 @@ const Page = () => {
     const [difficulty, setDifficulty] = useState<string>("");
     const [selectedTopic, setSelectedTopic] = useState<string[]>([]);
 
-    console.log(selectedCompany);
-    console.log(selectedList);
     const csvUrl = `https://raw.githubusercontent.com/prakash144/leetcode-company-wise-problems/main/${selectedCompany}/${selectedList}`;
     const { questions, loading, error } = useFetchQuestions(csvUrl);
 
@@ -43,7 +41,7 @@ const Page = () => {
             <div className="p-4">
                 {loading && <div className="text-center text-gray-500">Loading...</div>}
                 {error && <div className="text-center text-red-500">{error}</div>}
-                <QuestionTable questions={formattedQuestions} difficultyFilter={difficulty}/>
+                <QuestionTable questions={formattedQuestions} difficultyFilter={difficulty} selectedTopics={selectedTopic} />
             </div>
         </main>
     );
