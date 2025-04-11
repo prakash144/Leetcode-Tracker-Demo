@@ -7,7 +7,7 @@ import useFetchQuestions from "./services/fetchQuestions";
 
 const Page = () => {
     const [selectedCompany, setSelectedCompany] = useState("Google");
-    const [selectedList, setSelectedList] = useState("1. Thirty Days.csv");
+    const [selectedList, setSelectedList] = useState("5. All.csv");
     const [difficulty, setDifficulty] = useState<string>("");
     const [selectedTopic, setSelectedTopic] = useState<string[]>([]);
 
