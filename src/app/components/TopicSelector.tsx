@@ -65,8 +65,17 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
 
     const handleClearSelection = () => {
         setSelectedTopic(new Set());
+        setSearchQuery(""); // Clear the search query
         onTopicChange([]);
     };
+
+    // Filter topics based on search query
+    const filteredTopics = Object.entries(topics).map(([category, subtopics]) => {
+        const filteredSubtopics = subtopics.filter((topic) =>
+            topic.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        return { category, subtopics: filteredSubtopics };
+    });
 
     return (
         <Dialog.Root>
@@ -105,28 +114,30 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
                     </div>
 
                     <div className="h-64 pr-2 p-4 overflow-y-auto">
-                        {Object.entries(topics).map(([category, subtopics]) => (
-                            <div key={category} className="mb-6">
-                                <h3 className="text-lg font-semibold text-white mb-2">{category}</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {subtopics.map((topic) => (
-                                        <span
-                                            key={topic}
-                                            onClick={() => toggleTopicSelection(topic)}
-                                            role="button"
-                                            aria-pressed={selectedTopic.has(topic)}
-                                            className={`px-3 py-1 text-xs rounded-full cursor-pointer transition-all duration-200 ease-in-out border ${
-                                                selectedTopic.has(topic)
-                                                    ? "bg-green-600 text-white border-green-500"
-                                                    : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
-                                            }`}
-                                            aria-label={selectedTopic.has(topic) ? `Deselect ${topic}` : `Select ${topic}`}
-                                        >
-                                            {topic}
-                                        </span>
-                                    ))}
+                        {filteredTopics.map(({ category, subtopics }) => (
+                            subtopics.length > 0 && (
+                                <div key={category} className="mb-6">
+                                    <h3 className="text-lg font-semibold text-white mb-2">{category}</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {subtopics.map((topic) => (
+                                            <span
+                                                key={topic}
+                                                onClick={() => toggleTopicSelection(topic)}
+                                                role="button"
+                                                aria-pressed={selectedTopic.has(topic)}
+                                                className={`px-3 py-1 text-xs rounded-full cursor-pointer transition-all duration-200 ease-in-out border ${
+                                                    selectedTopic.has(topic)
+                                                        ? "bg-green-600 text-white border-green-500"
+                                                        : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
+                                                }`}
+                                                aria-label={selectedTopic.has(topic) ? `Deselect ${topic}` : `Select ${topic}`}
+                                            >
+                                                {topic}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )
                         ))}
                     </div>
 

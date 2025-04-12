@@ -13,53 +13,58 @@ interface Question {
 
 interface QuestionTableProps {
     questions: Question[];
-    difficultyFilter: string;  // This will come from FilterBar.tsx
-    selectedTopics: string[]; // This will come from the TopicSelector
+    difficultyFilter: string;
+    selectedTopics: string[];
+    searchTerm: string;
 }
 
-const QuestionTable = ({ questions, difficultyFilter, selectedTopics }: QuestionTableProps) => {
+const QuestionTable = ({ questions, difficultyFilter, selectedTopics, searchTerm }: QuestionTableProps) => {
     const [checked, setChecked] = useState<number[]>([]);
     const [bookmarked, setBookmarked] = useState<number[]>([]);
     const [sortBy, setSortBy] = useState<"acceptanceRate" | "frequency" | null>(null);
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-    // 🧠 Step 1: Filter by difficulty and selected topics
+    // Memoized filtered questions based on applied filters
     const filteredQuestions = useMemo(() => {
         return questions.filter((q) => {
-            const matchesDifficulty = difficultyFilter ? q.difficulty.toLowerCase() === difficultyFilter.toLowerCase() : true;
-            const matchesTopics = (Array.isArray(selectedTopics) && selectedTopics.length === 0) ||
-                selectedTopics.some(topic => q.topicTag.split(",").map(tag => tag.trim()).includes(topic));
-            return matchesDifficulty && matchesTopics;
+            const matchesDifficulty = difficultyFilter
+                ? q.difficulty.toLowerCase() === difficultyFilter.toLowerCase()
+                : true;
+
+            const matchesTopics = selectedTopics.length === 0 || selectedTopics.some(topic =>
+                q.topicTag.split(",").map(tag => tag.trim().toLowerCase()).includes(topic.toLowerCase())
+            );
+
+            const matchesSearch = searchTerm.trim() === "" || q.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+            return matchesDifficulty && matchesTopics && matchesSearch;
         });
-    }, [questions, difficultyFilter, selectedTopics]);
+    }, [questions, difficultyFilter, selectedTopics, searchTerm]);
 
-    // ✅ Step 2: Compute stats based on filtered questions
-    const filteredChecked = filteredQuestions.filter((q) => checked.includes(q.id));
-    const filteredBookmarked = filteredQuestions.filter((q) => bookmarked.includes(q.id));
+    // Memoized filtered checked and bookmarked questions
+    const filteredChecked = useMemo(() => filteredQuestions.filter((q) => checked.includes(q.id)), [filteredQuestions, checked]);
+    const filteredBookmarked = useMemo(() => filteredQuestions.filter((q) => bookmarked.includes(q.id)), [filteredQuestions, bookmarked]);
 
-    // 🧠 Step 3: Sorting
-    const sortedQuestions = () => {
+    // Sorting logic for filtered questions
+    const sortedQuestions = useMemo(() => {
         const sorted = [...filteredQuestions];
-
         if (sortBy) {
             sorted.sort((a, b) => {
                 let comparison = 0;
-
                 if (sortBy === "acceptanceRate") {
-                    const aRate = typeof a.acceptanceRate === "number" ? a.acceptanceRate : parseFloat(a.acceptanceRate);
-                    const bRate = typeof b.acceptanceRate === "number" ? b.acceptanceRate : parseFloat(b.acceptanceRate);
+                    const aRate = typeof a.acceptanceRate === "number" ? a.acceptanceRate : parseFloat(a.acceptanceRate as string);
+                    const bRate = typeof b.acceptanceRate === "number" ? b.acceptanceRate : parseFloat(b.acceptanceRate as string);
                     comparison = aRate - bRate;
                 } else if (sortBy === "frequency") {
                     comparison = a.frequency.localeCompare(b.frequency);
                 }
-
                 return sortDirection === "asc" ? comparison : -comparison;
             });
         }
-
         return sorted;
-    };
+    }, [filteredQuestions, sortBy, sortDirection]);
 
+    // Utility function to get color based on difficulty
     const getDifficultyColor = (difficulty: string) => {
         switch (difficulty.toLowerCase()) {
             case "easy": return "text-green-400";
@@ -69,12 +74,12 @@ const QuestionTable = ({ questions, difficultyFilter, selectedTopics }: Question
         }
     };
 
+    // Toggle bookmark state
     const toggleBookmark = (id: number) => {
-        setBookmarked((prev) =>
-            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-        );
+        setBookmarked((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
     };
 
+    // Handle sort action
     const handleSort = (column: "acceptanceRate" | "frequency") => {
         if (sortBy === column) {
             setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -134,53 +139,36 @@ const QuestionTable = ({ questions, difficultyFilter, selectedTopics }: Question
                 </tr>
                 </thead>
                 <tbody>
-                {sortedQuestions().map((q, index) => (
-                    <tr
-                        key={q.id}
-                        className="bg-zinc-800 border-b border-zinc-700 hover:bg-zinc-700/40"
-                    >
+                {sortedQuestions.map((q, index) => (
+                    <tr key={q.id} className="bg-zinc-800 border-b border-zinc-700 hover:bg-zinc-700/40">
                         <td className="px-4 py-3 text-zinc-400">{index + 1}</td>
-
                         <td className="px-4 py-3 font-medium">
-                            <a
-                                href={q.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-white hover:text-blue-500 transition-colors"
-                            >
+                            <a href={q.link} target="_blank" rel="noopener noreferrer" title={q.title} className="text-white hover:text-blue-500 transition-colors">
                                 {q.title}
                             </a>
                         </td>
-
                         <td className="px-4 py-3">
-                            {typeof q.acceptanceRate === "number"
-                                ? q.acceptanceRate.toFixed(2)
-                                : q.acceptanceRate}
+                            {typeof q.acceptanceRate === "number" ? q.acceptanceRate.toFixed(2) : q.acceptanceRate}
                         </td>
-
                         <td className={`px-4 py-3 font-semibold ${getDifficultyColor(q.difficulty)}`}>
                             {q.difficulty}
                         </td>
-                        {/* frequency placeholder */}
                         <td className="px-4 py-3">{q.frequency}</td>
-                        {/* Topic placeholder */}
                         <td className="px-4 py-3">
-                            {q.topicTag.split(",").map((topic, index) => {
-                                const isSelected = selectedTopics.includes(topic.trim());
+                            {q.topicTag.split(",").map((topic, i) => {
+                                const trimmedTopic = topic.trim();
+                                const isSelected = selectedTopics.includes(trimmedTopic);
                                 return (
-                                    <span
-                                        key={index}
-                                        className={`inline-block px-2 py-1 mr-2 mb-2 text-sm text-white rounded-md ${isSelected ? 'bg-blue-500' : 'bg-zinc-700'}`}
-                                    >
-                {topic.trim()}
-            </span>
+                                    <span key={i} className={`inline-block px-2 py-1 mr-2 mb-2 text-sm text-white rounded-md ${isSelected ? 'bg-blue-500' : 'bg-zinc-700'}`}>
+                                            {trimmedTopic}
+                                        </span>
                                 );
                             })}
                         </td>
-
                         <td className="px-4 py-3 text-center">
                             <input
                                 type="checkbox"
+                                title="Mark as solved"
                                 checked={checked.includes(q.id)}
                                 onChange={() =>
                                     setChecked((prev) =>
@@ -192,11 +180,9 @@ const QuestionTable = ({ questions, difficultyFilter, selectedTopics }: Question
                                 className="form-checkbox rounded-full bg-zinc-700 border-zinc-600 text-green-500 cursor-pointer"
                             />
                         </td>
-
                         <td className="px-4 py-3 text-center">
-                            <button onClick={() => toggleBookmark(q.id)}>
-                                <Star
-                                    className={`text-yellow-400 ${bookmarked.includes(q.id) ? "fill-yellow-400" : ""}`}/>
+                            <button onClick={() => toggleBookmark(q.id)} title="Toggle bookmark">
+                                <Star className={`text-yellow-400 ${bookmarked.includes(q.id) ? "fill-yellow-400" : ""}`} />
                             </button>
                         </td>
                     </tr>

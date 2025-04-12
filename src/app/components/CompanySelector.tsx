@@ -12,12 +12,12 @@ type CompanyCategory = {
     [category: string]: string[];
 };
 
-const companies: CompanyCategory =
-    { "Tech Giants": [ "Google", "Microsoft", "Apple", "Amazon", "Meta", "Tesla", "IBM", "Intel", "Oracle", "Samsung" ],
-        Startups: [ "Stripe", "Airbnb", "OpenAI", "Notion", "Figma", "Duolingo", "Canva", "Plaid", "Gusto", "Razorpay" ],
-        Consulting: [ "McKinsey", "BCG", "Bain", "Deloitte", "PwC", "EY", "KPMG", "Accenture", "ZS Associates", "Capgemini" ],
-        Other: [ "Spotify", "Slack", "Reddit", "Zoom", "Pinterest", "Atlassian", "Salesforce", "Cisco", "Twilio", "Shopify" ]
-    };
+const companies: CompanyCategory = {
+    "Tech Giants": ["Google", "Microsoft", "Apple", "Amazon", "Meta", "Tesla", "IBM", "Intel", "Oracle", "Samsung"],
+    Startups: ["Stripe", "Airbnb", "OpenAI", "Notion", "Figma", "Duolingo", "Canva", "Plaid", "Gusto", "Razorpay"],
+    Consulting: ["McKinsey", "BCG", "Bain", "Deloitte", "PwC", "EY", "KPMG", "Accenture", "ZS Associates", "Capgemini"],
+    Other: ["Spotify", "Slack", "Reddit", "Zoom", "Pinterest", "Atlassian", "Salesforce", "Cisco", "Twilio", "Shopify"],
+};
 
 interface CompanySelectorProps {
     selectedCompanies: string;
@@ -26,26 +26,32 @@ interface CompanySelectorProps {
 
 const CompanySelector: React.FC<CompanySelectorProps> = ({
                                                              selectedCompanies,
-                                                             onCompanyChange
+                                                             onCompanyChange,
                                                          }) => {
     const allCompanies = Object.values(companies).flat();
     const defaultCompany = selectedCompanies || allCompanies[0];
 
     const [selectedCompany, setSelectedCompany] = useState<string>(defaultCompany);
+    const [query, setQuery] = useState<string>("");
+    const [userTyping, setUserTyping] = useState(false);
 
     useEffect(() => {
         setSelectedCompany(defaultCompany);
-        onCompanyChange(defaultCompany); // Ensure parent is updated on initial render
+        onCompanyChange(defaultCompany);
     }, [defaultCompany, onCompanyChange]);
 
     const handleCompanySelect = (company: string) => {
         setSelectedCompany(company);
         onCompanyChange(company);
+        setQuery(company);
+        setUserTyping(false); // Prevent dropdown from staying open
     };
 
     const clearSelection = () => {
-        setSelectedCompany("Google");
-        onCompanyChange("Google");
+        const fallback = "Google";
+        setSelectedCompany(fallback);
+        onCompanyChange(fallback);
+        setQuery(""); // Reset search box
     };
 
     return (
@@ -64,8 +70,14 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
                 <Dialog.Content className="fixed top-1/2 left-1/2 max-w-md w-full bg-zinc-900 border border-zinc-700 text-white p-6 rounded-lg -translate-x-1/2 -translate-y-1/2 z-50">
                     <Dialog.Title className="text-xl font-semibold mb-2">Select a Company</Dialog.Title>
 
-                    {/* Autocomplete Search Input */}
-                    <CompanySearch onCompanySelect={handleCompanySelect} />
+                    {/* Search Box */}
+                    <CompanySearch
+                        onCompanySelect={handleCompanySelect}
+                        query={query}
+                        setQuery={setQuery}
+                        userTyping={userTyping}
+                        setUserTyping={setUserTyping}
+                    />
 
                     {/* Company Categories */}
                     <ScrollArea className="h-64 pr-2 mt-4 space-y-4">
@@ -83,8 +95,8 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
                                                     : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
                                             }`}
                                         >
-                      {company}
-                    </span>
+                                            {company}
+                                        </span>
                                     ))}
                                 </div>
                             </div>

@@ -3,9 +3,8 @@
 import { ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import CompanySearch from "./CompanySearch";
 import TopicSelector from "./TopicSelector";
-import CompanySelector from './CompanySelector';
+import CompanySelector from "./CompanySelector";
 
 import {
     DropdownMenu,
@@ -24,10 +23,26 @@ interface FilterBarProps {
     onDifficultySelect: (difficulty: string) => void;
     selectedTopic: string[];
     onTopicSelect: (topics: string[]) => void;
+    searchTerm: string;
+    onSearchChange: (value: string) => void;
 }
 
+const FilterBar = ({
+                       selectedCompany,
+                       onCompanySelect,
+                       onListSelect,
+                       selectedList,
+                       selectedDifficulty,
+                       onDifficultySelect,
+                       selectedTopic,
+                       onTopicSelect,
+                       searchTerm,
+                       onSearchChange,
+                   }: FilterBarProps) => {
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        onSearchChange(e.target.value);
+    };
 
-const FilterBar = ({ selectedCompany, onCompanySelect, onListSelect, selectedList, selectedDifficulty, onDifficultySelect, selectedTopic, onTopicSelect }: FilterBarProps) => {
     const listOptions = [
         { label: "Last 30 Days", value: "1. Thirty Days.csv" },
         { label: "Last 3 Months", value: "2. Three Months.csv" },
@@ -36,29 +51,29 @@ const FilterBar = ({ selectedCompany, onCompanySelect, onListSelect, selectedLis
         { label: "All Time", value: "5. All.csv" },
     ];
 
-
     const difficulties = ["Easy", "Medium", "Hard"];
-
 
     return (
         <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 bg-zinc-900 border-b border-zinc-700">
             <div className="flex flex-wrap items-center gap-2">
+                {/* List Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="outline"
-                            className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md">
-                            Lists <ChevronDown size={16} className="ml-1"/>
+                            className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
+                        >
+                            Lists <ChevronDown size={16} className="ml-1" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-zinc-900 border border-zinc-700 text-white">
-                        {listOptions.map(({label, value}) => (
+                        {listOptions.map(({ label, value }) => (
                             <DropdownMenuItem
                                 key={value}
                                 className={`hover:bg-zinc-800 cursor-pointer ${
                                     selectedList === value ? "bg-zinc-800 font-semibold text-green-400" : ""
                                 }`}
-                                onClick={() => onListSelect?.(value)}
+                                onClick={() => onListSelect(value)}
                             >
                                 {selectedList === value && <span className="mr-2">✅</span>}
                                 {label}
@@ -67,13 +82,14 @@ const FilterBar = ({ selectedCompany, onCompanySelect, onListSelect, selectedLis
                     </DropdownMenuContent>
                 </DropdownMenu>
 
+                {/* Difficulty Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="outline"
                             className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
                         >
-                            {selectedDifficulty || "Difficulty"} <ChevronDown size={16} className="ml-1"/>
+                            {selectedDifficulty || "Difficulty"} <ChevronDown size={16} className="ml-1" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-zinc-900 border-zinc-700 text-white">
@@ -83,9 +99,9 @@ const FilterBar = ({ selectedCompany, onCompanySelect, onListSelect, selectedLis
                                 className={`hover:bg-zinc-800 cursor-pointer ${
                                     selectedDifficulty === item ? "bg-zinc-800 font-semibold text-green-400" : ""
                                 }`}
-                                onClick={() => {
-                                    onDifficultySelect(selectedDifficulty === item ? '' : item);
-                                }}
+                                onClick={() =>
+                                    onDifficultySelect(selectedDifficulty === item ? '' : item)
+                                }
                             >
                                 {selectedDifficulty === item && <span className="mr-2">✅</span>}
                                 {item}
@@ -94,12 +110,12 @@ const FilterBar = ({ selectedCompany, onCompanySelect, onListSelect, selectedLis
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Topic selector integrated */}
+                {/* Topic Selector */}
                 <div className="flex items-center gap-4">
-                    <TopicSelector selectedTopics={selectedTopic} onTopicChange={(topics) => onTopicSelect(topics)} />
+                    <TopicSelector selectedTopics={selectedTopic} onTopicChange={onTopicSelect} />
                 </div>
 
-                {/* Company Selector integrated */}
+                {/* Company Selector */}
                 <div className="flex items-center gap-4">
                     <CompanySelector
                         selectedCompanies={selectedCompany}
@@ -108,13 +124,13 @@ const FilterBar = ({ selectedCompany, onCompanySelect, onListSelect, selectedLis
                 </div>
             </div>
 
+            {/* Search + Avatar */}
             <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                    <CompanySearch onCompanySelect={onCompanySelect}/>
-                </div>
-
+                {/* Search */}
                 <Input
                     placeholder="Search questions"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
                     className="w-[240px] text-sm bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
                 />
 
