@@ -4,6 +4,7 @@ import { useState } from "react";
 import FilterBar from "./components/FilterBar";
 import QuestionTable from "./components/QuestionTable";
 import useFetchQuestions from "./services/fetchQuestions";
+import Footer from "@/app/components/Footer";
 
 const Page = () => {
     const [selectedCompany, setSelectedCompany] = useState("Google");
@@ -43,6 +44,9 @@ const Page = () => {
                 {error && <div className="text-center text-red-500">{error}</div>}
                 <QuestionTable questions={formattedQuestions} difficultyFilter={difficulty} selectedTopics={selectedTopic} />
             </div>
+
+            {/* Footer */}
+            <Footer />
         </main>
     );
 };
