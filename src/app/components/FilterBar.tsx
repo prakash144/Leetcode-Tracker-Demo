@@ -130,7 +130,7 @@ const FilterBar = ({
             <div className="flex items-center gap-3">
                 {/* Last Updated Info */}
                 <div className="text-green-400 font-bold text-xs mr-2 whitespace-nowrap">
-                    Update Problems: {lastUpdated ?? "Loading..."}
+                    🧠 Problem Set – Updated on {lastUpdated ?? "Loading..."}
                 </div>
 
                 {/* Search */}
