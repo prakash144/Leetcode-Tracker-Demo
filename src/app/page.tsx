@@ -5,6 +5,7 @@ import FilterBar from "./components/FilterBar";
 import QuestionTable from "./components/QuestionTable";
 import useFetchQuestions from "./services/fetchQuestions";
 import Footer from "@/app/components/Footer";
+import { fetchLastUpdated } from "./services/fetchLastUpdated";
 
 const Page = () => {
     const [selectedCompany, setSelectedCompany] = useState("Google");
@@ -16,6 +17,7 @@ const Page = () => {
 
     const csvUrl = `https://raw.githubusercontent.com/prakash144/leetcode-company-wise-problems/main/${selectedCompany}/${selectedList}`;
     const { questions, loading, error } = useFetchQuestions(csvUrl);
+    const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
     // Debounce logic for search query
     useEffect(() => {
@@ -24,6 +26,15 @@ const Page = () => {
         }, 500); // debounce delay of 500ms
         return () => clearTimeout(timeoutId); // cleanup timeout
     }, [searchQuery]);
+
+    // Fetch lastUpdated only ONCE (on first mount)
+    useEffect(() => {
+        const getLastUpdatedOnce = async () => {
+            const date = await fetchLastUpdated("Google", "5. All.csv"); // <- hardcoded default path
+            setLastUpdated(date);
+        };
+        getLastUpdatedOnce();
+    }, []); // <- empty dependency array ensures it runs only once
 
     // Filter questions based on the search query
     const formattedQuestions = useMemo(() => {
@@ -48,6 +59,8 @@ const Page = () => {
 
     return (
         <main className="min-h-screen bg-black text-white">
+            {/* Delay FilterBar rendering until lastUpdated is ready to avoid hydration mismatch */}
+            {lastUpdated && (
             <FilterBar
                 selectedCompany={selectedCompany}
                 onCompanySelect={setSelectedCompany}
@@ -59,7 +72,9 @@ const Page = () => {
                 onTopicSelect={handleTopicSelect}
                 searchTerm={searchQuery}
                 onSearchChange={handleSearchChange}
+                lastUpdated={lastUpdated}
             />
+            )}
 
             <div className="p-4">
                 {loading && <div className="text-center text-gray-500">Loading...</div>}

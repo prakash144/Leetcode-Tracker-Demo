@@ -25,6 +25,7 @@ interface FilterBarProps {
     onTopicSelect: (topics: string[]) => void;
     searchTerm: string;
     onSearchChange: (value: string) => void;
+    lastUpdated?: string | null;
 }
 
 const FilterBar = ({
@@ -38,6 +39,7 @@ const FilterBar = ({
                        onTopicSelect,
                        searchTerm,
                        onSearchChange,
+                       lastUpdated,
                    }: FilterBarProps) => {
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         onSearchChange(e.target.value);
@@ -126,6 +128,11 @@ const FilterBar = ({
 
             {/* Search + Avatar */}
             <div className="flex items-center gap-3">
+                {/* Last Updated Info */}
+                <div className="text-green-400 font-bold text-xs mr-2 whitespace-nowrap">
+                    Update Problems: {lastUpdated ?? "Loading..."}
+                </div>
+
                 {/* Search */}
                 <Input
                     placeholder="Search questions"
