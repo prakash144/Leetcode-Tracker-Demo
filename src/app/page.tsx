@@ -5,6 +5,8 @@ import FilterBar from "./components/FilterBar";
 import QuestionTable from "./components/QuestionTable";
 import useFetchQuestions from "./services/fetchQuestions";
 import Footer from "@/app/components/Footer";
+import AppShell from "@/components/layout/AppShell";
+import PageHeader from "@/components/layout/PageHeader";
 import { fetchLastUpdated } from "./services/fetchLastUpdated";
 import { useAuth } from "@/hooks/useAuth";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -71,7 +73,20 @@ const Page = () => {
     };
 
     return (
-        <main className="min-h-screen bg-black text-white">
+        <AppShell
+            user={user}
+            authLoading={authLoading}
+            isAuthConfigured={isAuthConfigured}
+            onLogin={login}
+            onLogout={logout}
+            footer={<Footer />}
+        >
+            <PageHeader
+                eyebrow="Dashboard"
+                title="Problem Tracker"
+                description="Track company-wise LeetCode practice, review activity, and keep progress synced to your account."
+            />
+
             {/* Delay FilterBar rendering until lastUpdated is ready to avoid hydration mismatch */}
             {lastUpdated && (
             <FilterBar
@@ -86,15 +101,10 @@ const Page = () => {
                 searchTerm={searchQuery}
                 onSearchChange={handleSearchChange}
                 lastUpdated={lastUpdated}
-                authUser={user}
-                authLoading={authLoading}
-                isAuthConfigured={isAuthConfigured}
-                onLogin={login}
-                onLogout={logout}
             />
             )}
 
-            <div className="p-4">
+            <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
                 {loading && <LoadingState />}
                 {error && <ErrorState message={error} />}
                 {authError && <ErrorState message={authError} />}
@@ -117,9 +127,7 @@ const Page = () => {
                     onSaveNotes={saveNotes}
                 />
             </div>
-
-            <Footer />
-        </main>
+        </AppShell>
     );
 };
 

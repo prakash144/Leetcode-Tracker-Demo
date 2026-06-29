@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import type { User } from "firebase/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import TopicSelector from "./TopicSelector";
@@ -13,7 +12,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface FilterBarProps {
     selectedCompany: string;
@@ -27,11 +25,6 @@ interface FilterBarProps {
     searchTerm: string;
     onSearchChange: (value: string) => void;
     lastUpdated?: string | null;
-    authUser?: User | null;
-    authLoading?: boolean;
-    isAuthConfigured?: boolean;
-    onLogin?: () => void;
-    onLogout?: () => void;
 }
 
 const FilterBar = ({
@@ -46,11 +39,6 @@ const FilterBar = ({
                        searchTerm,
                        onSearchChange,
                        lastUpdated,
-                       authUser,
-                       authLoading = false,
-                       isAuthConfigured = false,
-                       onLogin,
-                       onLogout,
                    }: FilterBarProps) => {
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         onSearchChange(e.target.value);
@@ -65,11 +53,9 @@ const FilterBar = ({
     ];
 
     const difficulties = ["Easy", "Medium", "Hard"];
-    const avatarFallback =
-        authUser?.displayName?.charAt(0) || authUser?.email?.charAt(0) || "U";
 
     return (
-        <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 bg-zinc-900 border-b border-zinc-700">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8 bg-zinc-950 border-y border-zinc-800">
             <div className="flex flex-wrap items-center gap-2">
                 {/* List Dropdown */}
                 <DropdownMenu>
@@ -139,8 +125,8 @@ const FilterBar = ({
                 </div>
             </div>
 
-            {/* Search + Avatar */}
-            <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="flex flex-wrap items-center gap-3">
                 {/* Last Updated Info */}
                 <div className="text-green-400 font-bold text-xs mr-2 whitespace-nowrap">
                     🧠 Problem Set – Updated on {lastUpdated ?? "Loading..."}
@@ -153,42 +139,6 @@ const FilterBar = ({
                     onChange={handleSearchChange}
                     className="w-[240px] text-sm bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
                 />
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Avatar className="w-8 h-8 cursor-pointer border border-zinc-600">
-                            {authUser?.photoURL && (
-                                <AvatarImage src={authUser.photoURL} alt={authUser.displayName ?? "User"} />
-                            )}
-                            <AvatarFallback className="text-xs bg-zinc-800 text-white">
-                                {authLoading ? "..." : avatarFallback.toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-zinc-900 border-zinc-700 text-white w-40">
-                        <DropdownMenuItem className="hover:bg-zinc-800 cursor-pointer">
-                            Dashboard
-                        </DropdownMenuItem>
-                        {!authUser && (
-                            <DropdownMenuItem
-                                className="hover:bg-zinc-800 cursor-pointer"
-                                disabled={authLoading || !isAuthConfigured}
-                                onClick={onLogin}
-                            >
-                                Login
-                            </DropdownMenuItem>
-                        )}
-                        {authUser && (
-                            <DropdownMenuItem
-                                className="hover:bg-zinc-800 cursor-pointer"
-                                disabled={authLoading}
-                                onClick={onLogout}
-                            >
-                                Logout
-                            </DropdownMenuItem>
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
             </div>
         </div>
     );

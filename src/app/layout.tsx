@@ -43,15 +43,7 @@ export default function RootLayout({
         <body
             className={`${geistSans.variable} ${geistMono.variable} antialiased`} // Apply custom fonts globally
         >
-        <header>
-            {/* Optional header component or navigation could be added here */}
-        </header>
-
-        <main>{children}</main> {/* Render dynamic content here */}
-
-        <footer>
-            {/* Optional footer component */}
-        </footer>
+        {children}
         </body>
         </html>
     );
