@@ -6,6 +6,7 @@ import QuestionTable from "./components/QuestionTable";
 import useFetchQuestions from "./services/fetchQuestions";
 import Footer from "@/app/components/Footer";
 import { fetchLastUpdated } from "./services/fetchLastUpdated";
+import { useAuth } from "@/hooks/useAuth";
 
 const Page = () => {
     const [selectedCompany, setSelectedCompany] = useState("Google");
@@ -14,6 +15,13 @@ const Page = () => {
     const [selectedTopic, setSelectedTopic] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>(searchQuery);
+    const {
+        user,
+        loading: authLoading,
+        isConfigured: isAuthConfigured,
+        login,
+        logout,
+    } = useAuth();
 
     const csvUrl = `https://raw.githubusercontent.com/prakash144/leetcode-company-wise-problems/main/${selectedCompany}/${selectedList}`;
     const { questions, loading, error } = useFetchQuestions(csvUrl);
@@ -73,6 +81,11 @@ const Page = () => {
                 searchTerm={searchQuery}
                 onSearchChange={handleSearchChange}
                 lastUpdated={lastUpdated}
+                authUser={user}
+                authLoading={authLoading}
+                isAuthConfigured={isAuthConfigured}
+                onLogin={login}
+                onLogout={logout}
             />
             )}
 
