@@ -8,6 +8,7 @@ import Footer from "@/app/components/Footer";
 import { fetchLastUpdated } from "./services/fetchLastUpdated";
 import { useAuth } from "@/hooks/useAuth";
 import { useProblemProgress } from "@/hooks/useProblemProgress";
+import DashboardStats from "./components/DashboardStats";
 
 const Page = () => {
     const [selectedCompany, setSelectedCompany] = useState("Google");
@@ -105,6 +106,7 @@ const Page = () => {
             <div className="p-4">
                 {loading && <div className="text-center text-gray-500">Loading...</div>}
                 {error && <div className="text-center text-red-500">{error}</div>}
+                <DashboardStats questions={formattedQuestions} progressMap={progressMap} />
                 <QuestionTable
                     questions={formattedQuestions}
                     difficultyFilter={difficulty}
