@@ -1,26 +1,39 @@
 import { useState, useMemo } from "react";
-import { Star } from "lucide-react";
-
-interface Question {
-    id: number;
-    title: string;
-    link: string;
-    difficulty: string;
-    frequency: string;
-    acceptanceRate: string | number;
-    topicTag: string;
-}
+import { RotateCcw, Star } from "lucide-react";
+import type { Problem, ProgressMap } from "@/lib/progressTypes";
+import NotesDialog from "./NotesDialog";
 
 interface QuestionTableProps {
-    questions: Question[];
+    questions: Problem[];
     difficultyFilter: string;
     selectedTopics: string[];
     searchTerm: string;
+    progressMap: ProgressMap;
+    progressLoading: boolean;
+    progressEnabled: boolean;
+    onRequireAuth: () => void;
+    onToggleSolved: (problem: Problem) => void;
+    onToggleAttempted: (problem: Problem) => void;
+    onToggleBookmarked: (problem: Problem) => void;
+    onToggleRevision: (problem: Problem) => void;
+    onSaveNotes: (problem: Problem, notes: string) => void;
 }
 
-const QuestionTable = ({ questions, difficultyFilter, selectedTopics, searchTerm }: QuestionTableProps) => {
-    const [checked, setChecked] = useState<number[]>([]);
-    const [bookmarked, setBookmarked] = useState<number[]>([]);
+const QuestionTable = ({
+                           questions,
+                           difficultyFilter,
+                           selectedTopics,
+                           searchTerm,
+                           progressMap,
+                           progressLoading,
+                           progressEnabled,
+                           onRequireAuth,
+                           onToggleSolved,
+                           onToggleAttempted,
+                           onToggleBookmarked,
+                           onToggleRevision,
+                           onSaveNotes,
+                       }: QuestionTableProps) => {
     const [sortBy, setSortBy] = useState<"acceptanceRate" | "frequency" | null>(null);
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
@@ -42,8 +55,18 @@ const QuestionTable = ({ questions, difficultyFilter, selectedTopics, searchTerm
     }, [questions, difficultyFilter, selectedTopics, searchTerm]);
 
     // Memoized filtered checked and bookmarked questions
-    const filteredChecked = useMemo(() => filteredQuestions.filter((q) => checked.includes(q.id)), [filteredQuestions, checked]);
-    const filteredBookmarked = useMemo(() => filteredQuestions.filter((q) => bookmarked.includes(q.id)), [filteredQuestions, bookmarked]);
+    const filteredSolved = useMemo(
+        () => filteredQuestions.filter((q) => progressMap[q.problemId]?.solved),
+        [filteredQuestions, progressMap]
+    );
+    const filteredAttempted = useMemo(
+        () => filteredQuestions.filter((q) => progressMap[q.problemId]?.attempted),
+        [filteredQuestions, progressMap]
+    );
+    const filteredBookmarked = useMemo(
+        () => filteredQuestions.filter((q) => progressMap[q.problemId]?.bookmarked),
+        [filteredQuestions, progressMap]
+    );
 
     // Sorting logic for filtered questions
     const sortedQuestions = useMemo(() => {
@@ -74,9 +97,13 @@ const QuestionTable = ({ questions, difficultyFilter, selectedTopics, searchTerm
         }
     };
 
-    // Toggle bookmark state
-    const toggleBookmark = (id: number) => {
-        setBookmarked((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+    const requireProgressOrRun = (action: () => void) => {
+        if (!progressEnabled) {
+            onRequireAuth();
+            return;
+        }
+
+        action();
     };
 
     // Handle sort action
@@ -97,11 +124,19 @@ const QuestionTable = ({ questions, difficultyFilter, selectedTopics, searchTerm
                     Total: {filteredQuestions.length}
                 </div>
                 <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
-                    Solved: {filteredChecked.length}
+                    Solved: {filteredSolved.length}
+                </div>
+                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                    Attempted: {filteredAttempted.length}
                 </div>
                 <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
                     Bookmarked: {filteredBookmarked.length}
                 </div>
+                {progressLoading && (
+                    <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                        Syncing...
+                    </div>
+                )}
             </div>
 
             {/* 🔽 Question Table */}
@@ -135,12 +170,18 @@ const QuestionTable = ({ questions, difficultyFilter, selectedTopics, searchTerm
                     </th>
                     <th className="px-4 py-3">Topic</th>
                     <th className="px-4 py-3 text-center">Status</th>
+                    <th className="px-4 py-3 text-center">Attempted</th>
                     <th className="px-4 py-3 text-center">★</th>
+                    <th className="px-4 py-3 text-center">Revision</th>
+                    <th className="px-4 py-3 text-center">Notes</th>
                 </tr>
                 </thead>
                 <tbody>
-                {sortedQuestions.map((q, index) => (
-                    <tr key={q.id} className="bg-zinc-800 border-b border-zinc-700 hover:bg-zinc-700/40">
+                {sortedQuestions.map((q, index) => {
+                    const progress = progressMap[q.problemId];
+
+                    return (
+                    <tr key={`${q.company}-${q.list}-${q.problemId}`} className="bg-zinc-800 border-b border-zinc-700 hover:bg-zinc-700/40">
                         <td className="px-4 py-3 text-zinc-400">{index + 1}</td>
                         <td className="px-4 py-3 font-medium">
                             <a href={q.link} target="_blank" rel="noopener noreferrer" title={q.title} className="text-white hover:text-blue-500 transition-colors">
@@ -169,24 +210,48 @@ const QuestionTable = ({ questions, difficultyFilter, selectedTopics, searchTerm
                             <input
                                 type="checkbox"
                                 title="Mark as solved"
-                                checked={checked.includes(q.id)}
-                                onChange={() =>
-                                    setChecked((prev) =>
-                                        prev.includes(q.id)
-                                            ? prev.filter((x) => x !== q.id)
-                                            : [...prev, q.id]
-                                    )
-                                }
+                                checked={Boolean(progress?.solved)}
+                                onChange={() => requireProgressOrRun(() => onToggleSolved(q))}
                                 className="form-checkbox rounded-full bg-zinc-700 border-zinc-600 text-green-500 cursor-pointer"
                             />
                         </td>
                         <td className="px-4 py-3 text-center">
-                            <button onClick={() => toggleBookmark(q.id)} title="Toggle bookmark">
-                                <Star className={`text-yellow-400 ${bookmarked.includes(q.id) ? "fill-yellow-400" : ""}`} />
+                            <input
+                                type="checkbox"
+                                title="Mark as attempted"
+                                checked={Boolean(progress?.attempted)}
+                                onChange={() => requireProgressOrRun(() => onToggleAttempted(q))}
+                                className="form-checkbox rounded-full bg-zinc-700 border-zinc-600 text-blue-500 cursor-pointer"
+                            />
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                            <button
+                                onClick={() => requireProgressOrRun(() => onToggleBookmarked(q))}
+                                title="Toggle bookmark"
+                            >
+                                <Star className={`text-yellow-400 ${progress?.bookmarked ? "fill-yellow-400" : ""}`} />
                             </button>
                         </td>
+                        <td className="px-4 py-3 text-center">
+                            <button
+                                onClick={() => requireProgressOrRun(() => onToggleRevision(q))}
+                                title="Toggle revision"
+                                className={progress?.inRevisionList ? "text-cyan-400" : "text-zinc-400"}
+                            >
+                                <RotateCcw size={18} />
+                            </button>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                            <NotesDialog
+                                problem={q}
+                                notes={progress?.notes ?? ""}
+                                disabled={!progressEnabled}
+                                onRequireAuth={onRequireAuth}
+                                onSave={onSaveNotes}
+                            />
+                        </td>
                     </tr>
-                ))}
+                )})}
                 </tbody>
             </table>
         </div>

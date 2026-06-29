@@ -7,6 +7,7 @@ import useFetchQuestions from "./services/fetchQuestions";
 import Footer from "@/app/components/Footer";
 import { fetchLastUpdated } from "./services/fetchLastUpdated";
 import { useAuth } from "@/hooks/useAuth";
+import { useProblemProgress } from "@/hooks/useProblemProgress";
 
 const Page = () => {
     const [selectedCompany, setSelectedCompany] = useState("Google");
@@ -24,7 +25,19 @@ const Page = () => {
     } = useAuth();
 
     const csvUrl = `https://raw.githubusercontent.com/prakash144/leetcode-company-wise-problems/main/${selectedCompany}/${selectedList}`;
-    const { questions, loading, error } = useFetchQuestions(csvUrl);
+    const { questions, loading, error } = useFetchQuestions(csvUrl, {
+        company: selectedCompany,
+        list: selectedList,
+    });
+    const {
+        progressMap,
+        loading: progressLoading,
+        toggleSolved,
+        toggleAttempted,
+        toggleBookmarked,
+        toggleRevision,
+        saveNotes,
+    } = useProblemProgress(user?.uid);
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
     // Debounce logic for search query
@@ -97,6 +110,15 @@ const Page = () => {
                     difficultyFilter={difficulty}
                     selectedTopics={selectedTopic}
                     searchTerm={debouncedSearchQuery}
+                    progressMap={progressMap}
+                    progressLoading={progressLoading}
+                    progressEnabled={Boolean(user)}
+                    onRequireAuth={login}
+                    onToggleSolved={toggleSolved}
+                    onToggleAttempted={toggleAttempted}
+                    onToggleBookmarked={toggleBookmarked}
+                    onToggleRevision={toggleRevision}
+                    onSaveNotes={saveNotes}
                 />
             </div>
 

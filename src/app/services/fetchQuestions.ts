@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import Papa, { ParseResult } from "papaparse";
+import type { Problem } from "@/lib/progressTypes";
+import { getProblemId } from "@/lib/problemId";
 
 interface CsvItem {
     Title: string;
@@ -10,14 +12,9 @@ interface CsvItem {
     "Acceptance Rate": string; // Acceptance Rate as a string
 }
 
-interface Question {
-    title: string;
-    link: string;
-    difficulty: string;
-    topicTag: string;
+interface FetchQuestionsContext {
     company: string;
-    frequency: string;
-    acceptanceRate: string | number; // Can be string or number, depending on data format
+    list: string;
 }
 
 // Utility to fetch and parse the CSV file
@@ -34,8 +31,8 @@ const fetchCSV = async (url: string): Promise<CsvItem[]> => {
 };
 
 // Custom hook to fetch questions and manage loading/error state
-const useFetchQuestions = (url: string) => {
-    const [questions, setQuestions] = useState<Question[]>([]);
+const useFetchQuestions = (url: string, context: FetchQuestionsContext) => {
+    const [questions, setQuestions] = useState<Problem[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>("");
 
@@ -48,16 +45,27 @@ const useFetchQuestions = (url: string) => {
                 const data = await fetchCSV(url);
 
                 // Map data to desired structure
-                const formattedData = data.map((item) => ({
-                    title: item.Title,
-                    link: item.Link,
-                    difficulty: item.Difficulty,
-                    topicTag: item.Topics,
-                    company: "Google", // Example: Assuming the company is fixed for now
-                    frequency: item.Frequency,
-                    // Convert 'Acceptance Rate' to percentage
-                    acceptanceRate: convertToPercentage(item["Acceptance Rate"]),
-                }));
+                const formattedData = data.map((item) => {
+                    const topicTag = item.Topics || "";
+                    const title = item.Title || "";
+                    const link = item.Link || "";
+
+                    return {
+                        problemId: getProblemId(link, title),
+                        title,
+                        link,
+                        difficulty: item.Difficulty || "",
+                        topicTag,
+                        topics: topicTag
+                            .split(",")
+                            .map((topic) => topic.trim())
+                            .filter(Boolean),
+                        company: context.company,
+                        list: context.list,
+                        frequency: item.Frequency || "",
+                        acceptanceRate: convertToPercentage(item["Acceptance Rate"] || ""),
+                    };
+                });
 
                 setQuestions(formattedData);
                 setLoading(false);
@@ -69,7 +77,7 @@ const useFetchQuestions = (url: string) => {
         };
 
         loadQuestions();
-    }, [url]); // Refetch when the URL changes
+    }, [url, context.company, context.list]); // Refetch when the URL changes
 
     return { questions, loading, error };
 };
