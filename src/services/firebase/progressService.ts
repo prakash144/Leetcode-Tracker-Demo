@@ -86,6 +86,26 @@ export const updateDailyActivity = async (
   await setDoc(activityDoc(uid, date), payload, { merge: true });
 };
 
+export interface DailyActivity {
+  date: string;
+  solvedCount: number;
+  attemptedCount: number;
+}
+
+export const getUserActivity = async (uid: string): Promise<DailyActivity[]> => {
+  const snapshot = await getDocs(collection(requireDb(), "users", uid, "activity"));
+
+  return snapshot.docs.map((document) => {
+    const data = document.data();
+
+    return {
+      date: typeof data.date === "string" ? data.date : document.id,
+      solvedCount: typeof data.solvedCount === "number" ? data.solvedCount : 0,
+      attemptedCount: typeof data.attemptedCount === "number" ? data.attemptedCount : 0,
+    };
+  });
+};
+
 export const updateProgressFields = async (
   uid: string,
   problemId: string,

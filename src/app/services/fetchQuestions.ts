@@ -19,13 +19,24 @@ interface FetchQuestionsContext {
 
 // Utility to fetch and parse the CSV file
 const fetchCSV = async (url: string): Promise<CsvItem[]> => {
-    const response = await fetch(url);
-    const text = await response.text();
+    const cacheKey = `leetcode-tracker:csv:${url}`;
+    const cachedText =
+        typeof window !== "undefined" ? window.sessionStorage.getItem(cacheKey) : null;
+    let text = cachedText;
 
-    const result: ParseResult<CsvItem> = Papa.parse<CsvItem>(text, {
+    if (text === null) {
+        const response = await fetch(url);
+        text = await response.text();
+
+        if (typeof window !== "undefined") {
+            window.sessionStorage.setItem(cacheKey, text);
+        }
+    }
+
+    const result = Papa.parse<CsvItem>(text, {
         header: true,
         skipEmptyLines: true,
-    });
+    }) as unknown as ParseResult<CsvItem>;
 
     return result.data;
 };

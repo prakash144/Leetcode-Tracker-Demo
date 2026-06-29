@@ -6,6 +6,7 @@ import type { Problem, ProgressMap, UserProblemProgress } from "@/lib/progressTy
 import {
   getUserProgress,
   saveProblemProgress,
+  updateDailyActivity,
 } from "@/services/firebase/progressService";
 
 const emptyProgress = (problemId: string): UserProblemProgress => ({
@@ -21,6 +22,8 @@ const emptyProgress = (problemId: string): UserProblemProgress => ({
   revisionAddedAt: null,
   updatedAt: Timestamp.now(),
 });
+
+const getActivityDate = () => new Date().toISOString().slice(0, 10);
 
 export const useProblemProgress = (uid?: string | null) => {
   const [progressMap, setProgressMap] = useState<ProgressMap>({});
@@ -71,7 +74,11 @@ export const useProblemProgress = (uid?: string | null) => {
   const updateProgress = useCallback(
     async (
       problem: Problem,
-      updater: (current: UserProblemProgress) => UserProblemProgress
+      updater: (current: UserProblemProgress) => UserProblemProgress,
+      activity?: (current: UserProblemProgress, next: UserProblemProgress) => {
+        solvedDelta?: number;
+        attemptedDelta?: number;
+      }
     ) => {
       if (!uid) {
         return;
@@ -87,6 +94,11 @@ export const useProblemProgress = (uid?: string | null) => {
 
       try {
         await saveProblemProgress(uid, next);
+        const activityDelta = activity?.(current, next);
+
+        if (activityDelta?.solvedDelta || activityDelta?.attemptedDelta) {
+          await updateDailyActivity(uid, getActivityDate(), activityDelta);
+        }
       } catch (progressError) {
         setProgressMap((previous) => ({
           ...previous,
@@ -116,7 +128,10 @@ export const useProblemProgress = (uid?: string | null) => {
           attemptedAt: solved && !current.attemptedAt ? now : current.attemptedAt,
           updatedAt: now,
         };
-      }),
+      }, (current, next) => ({
+        solvedDelta: !current.solved && next.solved ? 1 : 0,
+        attemptedDelta: !current.attempted && next.attempted ? 1 : 0,
+      })),
     [updateProgress]
   );
 
@@ -132,7 +147,9 @@ export const useProblemProgress = (uid?: string | null) => {
           attemptedAt: attempted ? now : null,
           updatedAt: now,
         };
-      }),
+      }, (current, next) => ({
+        attemptedDelta: !current.attempted && next.attempted ? 1 : 0,
+      })),
     [updateProgress]
   );
 
