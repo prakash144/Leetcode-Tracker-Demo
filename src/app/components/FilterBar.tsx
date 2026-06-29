@@ -1,10 +1,11 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import TopicSelector from "./TopicSelector";
 import CompanySelector from "./CompanySelector";
+import type { ProblemStatusFilter } from "@/features/problems/hooks/useFilteredProblems";
 
 import {
     DropdownMenu,
@@ -22,8 +23,12 @@ interface FilterBarProps {
     onDifficultySelect: (difficulty: string) => void;
     selectedTopic: string[];
     onTopicSelect: (topics: string[]) => void;
+    selectedStatus: ProblemStatusFilter;
+    onStatusSelect: (status: ProblemStatusFilter) => void;
     searchTerm: string;
     onSearchChange: (value: string) => void;
+    onResetFilters: () => void;
+    hasActiveFilters: boolean;
     lastUpdated?: string | null;
 }
 
@@ -36,8 +41,12 @@ const FilterBar = ({
                        onDifficultySelect,
                        selectedTopic,
                        onTopicSelect,
+                       selectedStatus,
+                       onStatusSelect,
                        searchTerm,
                        onSearchChange,
+                       onResetFilters,
+                       hasActiveFilters,
                        lastUpdated,
                    }: FilterBarProps) => {
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,6 +62,16 @@ const FilterBar = ({
     ];
 
     const difficulties = ["Easy", "Medium", "Hard"];
+    const statusOptions: { label: string; value: ProblemStatusFilter }[] = [
+        { label: "All statuses", value: "all" },
+        { label: "Solved", value: "solved" },
+        { label: "Attempted", value: "attempted" },
+        { label: "Unsolved", value: "unsolved" },
+        { label: "Favorites", value: "bookmarked" },
+        { label: "Revision", value: "revision" },
+    ];
+    const selectedStatusLabel =
+        statusOptions.find((option) => option.value === selectedStatus)?.label ?? "Status";
 
     return (
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8 bg-zinc-950 border-y border-zinc-800">
@@ -115,6 +134,43 @@ const FilterBar = ({
                 <div className="flex items-center gap-4">
                     <TopicSelector selectedTopics={selectedTopic} onTopicChange={onTopicSelect} />
                 </div>
+
+                {/* Status Dropdown */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="outline"
+                            className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
+                        >
+                            {selectedStatusLabel} <ChevronDown size={16} className="ml-1" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-zinc-900 border-zinc-700 text-white">
+                        {statusOptions.map((item) => (
+                            <DropdownMenuItem
+                                key={item.value}
+                                className={`hover:bg-zinc-800 cursor-pointer ${
+                                    selectedStatus === item.value ? "bg-zinc-800 font-semibold text-green-400" : ""
+                                }`}
+                                onClick={() => onStatusSelect(item.value)}
+                            >
+                                {selectedStatus === item.value && <span className="mr-2">✅</span>}
+                                {item.label}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!hasActiveFilters}
+                    onClick={onResetFilters}
+                    className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
+                >
+                    <RotateCcw size={16} />
+                    Reset
+                </Button>
 
                 {/* Company Selector */}
                 <div className="flex items-center gap-4">

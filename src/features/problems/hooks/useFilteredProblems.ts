@@ -1,20 +1,37 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Problem } from "@/lib/progressTypes";
+import type { Problem, ProgressMap } from "@/lib/progressTypes";
+
+export type ProblemStatusFilter =
+  | "all"
+  | "solved"
+  | "attempted"
+  | "unsolved"
+  | "bookmarked"
+  | "revision";
 
 export interface ProblemFilters {
   difficulty?: string;
   selectedTopics?: string[];
   searchTerm?: string;
+  status?: ProblemStatusFilter;
+  progressMap?: ProgressMap;
 }
 
 export const matchesProblemFilters = (
   problem: Problem,
-  { difficulty = "", selectedTopics = [], searchTerm = "" }: ProblemFilters
+  {
+    difficulty = "",
+    selectedTopics = [],
+    searchTerm = "",
+    status = "all",
+    progressMap = {},
+  }: ProblemFilters
 ) => {
   const normalizedDifficulty = difficulty.toLowerCase();
   const normalizedSearch = searchTerm.trim().toLowerCase();
+  const progress = progressMap[problem.problemId];
   const normalizedProblemTopics = problem.topicTag
     .split(",")
     .map((tag) => tag.trim().toLowerCase());
@@ -33,7 +50,25 @@ export const matchesProblemFilters = (
     normalizedSearch === "" ||
     problem.title.toLowerCase().includes(normalizedSearch);
 
-  return matchesDifficulty && matchesTopics && matchesSearch;
+  const matchesStatus = (() => {
+    switch (status) {
+      case "solved":
+        return Boolean(progress?.solved);
+      case "attempted":
+        return Boolean(progress?.attempted);
+      case "unsolved":
+        return !progress?.solved && !progress?.attempted;
+      case "bookmarked":
+        return Boolean(progress?.bookmarked);
+      case "revision":
+        return Boolean(progress?.inRevisionList);
+      case "all":
+      default:
+        return true;
+    }
+  })();
+
+  return matchesDifficulty && matchesTopics && matchesSearch && matchesStatus;
 };
 
 export const filterProblems = (problems: Problem[], filters: ProblemFilters) =>
@@ -43,10 +78,17 @@ export const useFilteredProblems = (
   problems: Problem[],
   filters: ProblemFilters
 ) => {
-  const { difficulty, searchTerm, selectedTopics } = filters;
+  const { difficulty, progressMap, searchTerm, selectedTopics, status } = filters;
 
   return useMemo(
-    () => filterProblems(problems, { difficulty, searchTerm, selectedTopics }),
-    [difficulty, problems, searchTerm, selectedTopics]
+    () =>
+      filterProblems(problems, {
+        difficulty,
+        progressMap,
+        searchTerm,
+        selectedTopics,
+        status,
+      }),
+    [difficulty, problems, progressMap, searchTerm, selectedTopics, status]
   );
 };

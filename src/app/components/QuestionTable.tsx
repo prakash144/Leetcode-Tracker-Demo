@@ -1,8 +1,13 @@
 import { RotateCcw, Star } from "lucide-react";
 import type { Problem, ProgressMap } from "@/lib/progressTypes";
 import EmptyState from "@/components/states/EmptyState";
-import { useFilteredProblems } from "@/features/problems/hooks/useFilteredProblems";
+import {
+    type ProblemStatusFilter,
+    useFilteredProblems,
+} from "@/features/problems/hooks/useFilteredProblems";
 import { useProblemSorting } from "@/features/problems/hooks/useProblemSorting";
+import { usePagination } from "@/features/problems/hooks/usePagination";
+import ProblemPagination from "@/features/problems/components/ProblemPagination";
 import NotesDialog from "./NotesDialog";
 
 interface QuestionTableProps {
@@ -10,6 +15,7 @@ interface QuestionTableProps {
     difficultyFilter: string;
     selectedTopics: string[];
     searchTerm: string;
+    statusFilter: ProblemStatusFilter;
     progressMap: ProgressMap;
     progressLoading: boolean;
     progressEnabled: boolean;
@@ -26,6 +32,7 @@ const QuestionTable = ({
                            difficultyFilter,
                            selectedTopics,
                            searchTerm,
+                           statusFilter,
                            progressMap,
                            progressLoading,
                            progressEnabled,
@@ -40,13 +47,28 @@ const QuestionTable = ({
         difficulty: difficultyFilter,
         selectedTopics,
         searchTerm,
+        status: statusFilter,
+        progressMap,
     });
     const { sortedProblems, sortBy, sortDirection, handleSort } =
         useProblemSorting(filteredQuestions);
+    const {
+        currentPage,
+        pageSize,
+        range,
+        setCurrentPage,
+        setPageSize,
+        totalPages,
+    } = usePagination(sortedProblems.length);
+    const paginatedProblems = sortedProblems.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    );
 
     const filteredSolved = filteredQuestions.filter((q) => progressMap[q.problemId]?.solved);
     const filteredAttempted = filteredQuestions.filter((q) => progressMap[q.problemId]?.attempted);
     const filteredBookmarked = filteredQuestions.filter((q) => progressMap[q.problemId]?.bookmarked);
+    const filteredRevision = filteredQuestions.filter((q) => progressMap[q.problemId]?.inRevisionList);
 
     // Utility function to get color based on difficulty
     const getDifficultyColor = (difficulty: string) => {
@@ -72,7 +94,13 @@ const QuestionTable = ({
             {/* ✅ Count Summary Section */}
             <div className="flex flex-wrap gap-4 text-sm font-medium text-zinc-300">
                 <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
-                    Total: {filteredQuestions.length}
+                    Dataset: {questions.length}
+                </div>
+                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                    Filtered: {filteredQuestions.length}
+                </div>
+                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                    Page: {range.from}-{range.to}
                 </div>
                 <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
                     Solved: {filteredSolved.length}
@@ -82,6 +110,9 @@ const QuestionTable = ({
                 </div>
                 <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
                     Bookmarked: {filteredBookmarked.length}
+                </div>
+                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                    Revision: {filteredRevision.length}
                 </div>
                 {progressLoading && (
                     <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
@@ -96,6 +127,7 @@ const QuestionTable = ({
 
             {/* 🔽 Question Table */}
             {sortedProblems.length > 0 && (
+            <>
             <table className="w-full text-sm text-left text-zinc-300">
                 <thead className="text-xs uppercase bg-zinc-900 text-zinc-500 border-b border-zinc-700">
                 <tr>
@@ -133,12 +165,12 @@ const QuestionTable = ({
                 </tr>
                 </thead>
                 <tbody>
-                {sortedProblems.map((q, index) => {
+                {paginatedProblems.map((q, index) => {
                     const progress = progressMap[q.problemId];
 
                     return (
                     <tr key={`${q.company}-${q.list}-${q.problemId}`} className="bg-zinc-800 border-b border-zinc-700 hover:bg-zinc-700/40">
-                        <td className="px-4 py-3 text-zinc-400">{index + 1}</td>
+                        <td className="px-4 py-3 text-zinc-400">{range.from + index}</td>
                         <td className="px-4 py-3 font-medium">
                             <a href={q.link} target="_blank" rel="noopener noreferrer" title={q.title} className="text-white hover:text-blue-500 transition-colors">
                                 {q.title}
@@ -210,6 +242,17 @@ const QuestionTable = ({
                 )})}
                 </tbody>
             </table>
+            <ProblemPagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                rangeFrom={range.from}
+                rangeTo={range.to}
+                totalItems={sortedProblems.length}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+            />
+            </>
             )}
         </div>
     );

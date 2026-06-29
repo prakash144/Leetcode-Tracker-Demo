@@ -16,13 +16,24 @@ import Heatmap from "./components/Heatmap";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingState from "@/components/states/LoadingState";
 import { filterProblems } from "@/features/problems/hooks/useFilteredProblems";
+import { useProblemFilters } from "@/features/problems/hooks/useProblemFilters";
 
 const Page = () => {
     const [selectedCompany, setSelectedCompany] = useState("Google");
     const [selectedList, setSelectedList] = useState("5. All.csv");
-    const [difficulty, setDifficulty] = useState<string>("");
-    const [selectedTopic, setSelectedTopic] = useState<string[]>([]);
-    const [searchQuery, setSearchQuery] = useState<string>("");
+    const {
+        difficulty,
+        hasActiveFilters,
+        resetFilters,
+        searchTerm,
+        selectedTopics,
+        setDifficulty,
+        setSearchTerm,
+        setSelectedTopics,
+        setStatusFilter,
+        statusFilter,
+    } = useProblemFilters();
+    const searchQuery = searchTerm;
     const debouncedSearchQuery = useDebouncedValue(searchQuery, 500);
     const {
         user,
@@ -64,14 +75,6 @@ const Page = () => {
         return filterProblems(questions, { searchTerm: debouncedSearchQuery });
     }, [questions, debouncedSearchQuery]);
 
-    const handleTopicSelect = (topics: string[]) => {
-        setSelectedTopic(topics);
-    };
-
-    const handleSearchChange = (searchQuery: string) => {
-        setSearchQuery(searchQuery);
-    };
-
     return (
         <AppShell
             user={user}
@@ -96,10 +99,14 @@ const Page = () => {
                 selectedList={selectedList}
                 selectedDifficulty={difficulty}
                 onDifficultySelect={setDifficulty}
-                selectedTopic={selectedTopic}
-                onTopicSelect={handleTopicSelect}
+                selectedTopic={selectedTopics}
+                onTopicSelect={setSelectedTopics}
+                selectedStatus={statusFilter}
+                onStatusSelect={setStatusFilter}
                 searchTerm={searchQuery}
-                onSearchChange={handleSearchChange}
+                onSearchChange={setSearchTerm}
+                onResetFilters={resetFilters}
+                hasActiveFilters={hasActiveFilters}
                 lastUpdated={lastUpdated}
             />
             )}
@@ -112,10 +119,11 @@ const Page = () => {
                 <DashboardStats questions={formattedQuestions} progressMap={progressMap} />
                 <Heatmap uid={user?.uid} />
                 <QuestionTable
-                    questions={formattedQuestions}
+                    questions={questions}
                     difficultyFilter={difficulty}
-                    selectedTopics={selectedTopic}
+                    selectedTopics={selectedTopics}
                     searchTerm={debouncedSearchQuery}
+                    statusFilter={statusFilter}
                     progressMap={progressMap}
                     progressLoading={progressLoading}
                     progressEnabled={Boolean(user)}

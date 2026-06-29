@@ -14,6 +14,11 @@ export interface ProblemSortState {
 const parseAcceptanceRate = (value: Problem["acceptanceRate"]) =>
   typeof value === "number" ? value : parseFloat(value);
 
+const parseFrequency = (value: Problem["frequency"]) => {
+  const parsed = parseFloat(value);
+  return Number.isNaN(parsed) ? value : parsed;
+};
+
 export const sortProblems = (
   problems: Problem[],
   { sortBy, sortDirection }: ProblemSortState
@@ -25,11 +30,23 @@ export const sortProblems = (
   }
 
   sorted.sort((a, b) => {
-    const comparison =
-      sortBy === "acceptanceRate"
-        ? parseAcceptanceRate(a.acceptanceRate) -
+    const comparison = (() => {
+      if (sortBy === "acceptanceRate") {
+        return (
+          parseAcceptanceRate(a.acceptanceRate) -
           parseAcceptanceRate(b.acceptanceRate)
-        : a.frequency.localeCompare(b.frequency);
+        );
+      }
+
+      const frequencyA = parseFrequency(a.frequency);
+      const frequencyB = parseFrequency(b.frequency);
+
+      if (typeof frequencyA === "number" && typeof frequencyB === "number") {
+        return frequencyA - frequencyB;
+      }
+
+      return String(frequencyA).localeCompare(String(frequencyB));
+    })();
 
     return sortDirection === "asc" ? comparison : -comparison;
   });
