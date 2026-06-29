@@ -10,13 +10,18 @@ export async function fetchCompanyList(): Promise<string[]> {
 
     try {
         const response = await fetch(GITHUB_API_URL);
+
+        if (!response.ok) {
+            throw new Error(`GitHub API returned ${response.status}`);
+        }
+
         const data: GithubContentItem[] = await response.json();
 
         const folders = data
             .filter((item) => item.type === "dir")
             .map((item) => item.name)
             .sort();
-        console.log(folders.join(", "));
+
         return folders;
     } catch (error) {
         console.error("Error fetching companies:", error);

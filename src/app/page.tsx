@@ -1,15 +1,19 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import FilterBar from "./components/FilterBar";
 import QuestionTable from "./components/QuestionTable";
 import useFetchQuestions from "./services/fetchQuestions";
 import Footer from "@/app/components/Footer";
 import { fetchLastUpdated } from "./services/fetchLastUpdated";
 import { useAuth } from "@/hooks/useAuth";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useProblemProgress } from "@/hooks/useProblemProgress";
 import DashboardStats from "./components/DashboardStats";
 import Heatmap from "./components/Heatmap";
+import ErrorState from "@/components/states/ErrorState";
+import LoadingState from "@/components/states/LoadingState";
+import { filterProblems } from "@/features/problems/hooks/useFilteredProblems";
 
 const Page = () => {
     const [selectedCompany, setSelectedCompany] = useState("Google");
@@ -17,7 +21,7 @@ const Page = () => {
     const [difficulty, setDifficulty] = useState<string>("");
     const [selectedTopic, setSelectedTopic] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>(searchQuery);
+    const debouncedSearchQuery = useDebouncedValue(searchQuery, 500);
     const {
         user,
         loading: authLoading,
@@ -44,14 +48,6 @@ const Page = () => {
     } = useProblemProgress(user?.uid);
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-    // Debounce logic for search query
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setDebouncedSearchQuery(searchQuery);
-        }, 500); // debounce delay of 500ms
-        return () => clearTimeout(timeoutId); // cleanup timeout
-    }, [searchQuery]);
-
     // Fetch lastUpdated only ONCE (on first mount)
     useEffect(() => {
         const getLastUpdatedOnce = async () => {
@@ -63,15 +59,7 @@ const Page = () => {
 
     // Filter questions based on the search query
     const formattedQuestions = useMemo(() => {
-        return questions
-            .map((question, index) => ({
-                ...question,
-                id: index + 1,
-                acceptance: "N/A",
-            }))
-            .filter((question) =>
-                question.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
-            );
+        return filterProblems(questions, { searchTerm: debouncedSearchQuery });
     }, [questions, debouncedSearchQuery]);
 
     const handleTopicSelect = (topics: string[]) => {
@@ -107,10 +95,10 @@ const Page = () => {
             )}
 
             <div className="p-4">
-                {loading && <div className="text-center text-gray-500">Loading...</div>}
-                {error && <div className="text-center text-red-500">{error}</div>}
-                {authError && <div className="text-center text-red-500">{authError}</div>}
-                {progressError && <div className="text-center text-red-500">{progressError}</div>}
+                {loading && <LoadingState />}
+                {error && <ErrorState message={error} />}
+                {authError && <ErrorState message={authError} />}
+                {progressError && <ErrorState message={progressError} />}
                 <DashboardStats questions={formattedQuestions} progressMap={progressMap} />
                 <Heatmap uid={user?.uid} />
                 <QuestionTable

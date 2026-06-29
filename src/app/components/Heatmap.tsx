@@ -1,6 +1,7 @@
 "use client";
 
 import { useHeatmapData } from "@/hooks/useHeatmapData";
+import ErrorState from "@/components/states/ErrorState";
 
 interface HeatmapProps {
     uid?: string | null;
@@ -15,7 +16,7 @@ const getCellColor = (count: number) => {
 };
 
 const Heatmap = ({ uid }: HeatmapProps) => {
-    const { days, loading } = useHeatmapData(uid);
+    const { days, loading, error } = useHeatmapData(uid);
 
     return (
         <section className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 mb-4">
@@ -23,6 +24,7 @@ const Heatmap = ({ uid }: HeatmapProps) => {
                 <h2 className="text-sm font-semibold text-zinc-200">Activity</h2>
                 {loading && <span className="text-xs text-zinc-500">Loading...</span>}
             </div>
+            {error && <ErrorState message={error} />}
             <div className="overflow-x-auto">
                 <div className="grid grid-flow-col grid-rows-7 gap-1 w-max">
                     {days.map((day) => (

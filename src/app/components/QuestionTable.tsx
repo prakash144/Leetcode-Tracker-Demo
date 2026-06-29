@@ -1,6 +1,8 @@
-import { useState, useMemo } from "react";
 import { RotateCcw, Star } from "lucide-react";
 import type { Problem, ProgressMap } from "@/lib/progressTypes";
+import EmptyState from "@/components/states/EmptyState";
+import { useFilteredProblems } from "@/features/problems/hooks/useFilteredProblems";
+import { useProblemSorting } from "@/features/problems/hooks/useProblemSorting";
 import NotesDialog from "./NotesDialog";
 
 interface QuestionTableProps {
@@ -34,58 +36,17 @@ const QuestionTable = ({
                            onToggleRevision,
                            onSaveNotes,
                        }: QuestionTableProps) => {
-    const [sortBy, setSortBy] = useState<"acceptanceRate" | "frequency" | null>(null);
-    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+    const filteredQuestions = useFilteredProblems(questions, {
+        difficulty: difficultyFilter,
+        selectedTopics,
+        searchTerm,
+    });
+    const { sortedProblems, sortBy, sortDirection, handleSort } =
+        useProblemSorting(filteredQuestions);
 
-    // Memoized filtered questions based on applied filters
-    const filteredQuestions = useMemo(() => {
-        return questions.filter((q) => {
-            const matchesDifficulty = difficultyFilter
-                ? q.difficulty.toLowerCase() === difficultyFilter.toLowerCase()
-                : true;
-
-            const matchesTopics = selectedTopics.length === 0 || selectedTopics.some(topic =>
-                q.topicTag.split(",").map(tag => tag.trim().toLowerCase()).includes(topic.toLowerCase())
-            );
-
-            const matchesSearch = searchTerm.trim() === "" || q.title.toLowerCase().includes(searchTerm.toLowerCase());
-
-            return matchesDifficulty && matchesTopics && matchesSearch;
-        });
-    }, [questions, difficultyFilter, selectedTopics, searchTerm]);
-
-    // Memoized filtered checked and bookmarked questions
-    const filteredSolved = useMemo(
-        () => filteredQuestions.filter((q) => progressMap[q.problemId]?.solved),
-        [filteredQuestions, progressMap]
-    );
-    const filteredAttempted = useMemo(
-        () => filteredQuestions.filter((q) => progressMap[q.problemId]?.attempted),
-        [filteredQuestions, progressMap]
-    );
-    const filteredBookmarked = useMemo(
-        () => filteredQuestions.filter((q) => progressMap[q.problemId]?.bookmarked),
-        [filteredQuestions, progressMap]
-    );
-
-    // Sorting logic for filtered questions
-    const sortedQuestions = useMemo(() => {
-        const sorted = [...filteredQuestions];
-        if (sortBy) {
-            sorted.sort((a, b) => {
-                let comparison = 0;
-                if (sortBy === "acceptanceRate") {
-                    const aRate = typeof a.acceptanceRate === "number" ? a.acceptanceRate : parseFloat(a.acceptanceRate as string);
-                    const bRate = typeof b.acceptanceRate === "number" ? b.acceptanceRate : parseFloat(b.acceptanceRate as string);
-                    comparison = aRate - bRate;
-                } else if (sortBy === "frequency") {
-                    comparison = a.frequency.localeCompare(b.frequency);
-                }
-                return sortDirection === "asc" ? comparison : -comparison;
-            });
-        }
-        return sorted;
-    }, [filteredQuestions, sortBy, sortDirection]);
+    const filteredSolved = filteredQuestions.filter((q) => progressMap[q.problemId]?.solved);
+    const filteredAttempted = filteredQuestions.filter((q) => progressMap[q.problemId]?.attempted);
+    const filteredBookmarked = filteredQuestions.filter((q) => progressMap[q.problemId]?.bookmarked);
 
     // Utility function to get color based on difficulty
     const getDifficultyColor = (difficulty: string) => {
@@ -104,16 +65,6 @@ const QuestionTable = ({
         }
 
         action();
-    };
-
-    // Handle sort action
-    const handleSort = (column: "acceptanceRate" | "frequency") => {
-        if (sortBy === column) {
-            setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-        } else {
-            setSortBy(column);
-            setSortDirection("asc");
-        }
     };
 
     return (
@@ -139,7 +90,12 @@ const QuestionTable = ({
                 )}
             </div>
 
+            {sortedProblems.length === 0 && (
+                <EmptyState message="No questions match the current filters." />
+            )}
+
             {/* 🔽 Question Table */}
+            {sortedProblems.length > 0 && (
             <table className="w-full text-sm text-left text-zinc-300">
                 <thead className="text-xs uppercase bg-zinc-900 text-zinc-500 border-b border-zinc-700">
                 <tr>
@@ -177,7 +133,7 @@ const QuestionTable = ({
                 </tr>
                 </thead>
                 <tbody>
-                {sortedQuestions.map((q, index) => {
+                {sortedProblems.map((q, index) => {
                     const progress = progressMap[q.problemId];
 
                     return (
@@ -254,6 +210,7 @@ const QuestionTable = ({
                 )})}
                 </tbody>
             </table>
+            )}
         </div>
     );
 };

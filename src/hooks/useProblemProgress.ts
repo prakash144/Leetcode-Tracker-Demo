@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Timestamp } from "firebase/firestore";
 import type { Problem, ProgressMap, UserProblemProgress } from "@/lib/progressTypes";
 import {
@@ -27,14 +27,20 @@ const getActivityDate = () => new Date().toISOString().slice(0, 10);
 
 export const useProblemProgress = (uid?: string | null) => {
   const [progressMap, setProgressMap] = useState<ProgressMap>({});
+  const progressMapRef = useRef<ProgressMap>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    progressMapRef.current = progressMap;
+  }, [progressMap]);
 
   useEffect(() => {
     let cancelled = false;
 
     const loadProgress = async () => {
       if (!uid) {
+        progressMapRef.current = {};
         setProgressMap({});
         setLoading(false);
         return;
@@ -47,6 +53,7 @@ export const useProblemProgress = (uid?: string | null) => {
         const progress = await getUserProgress(uid);
 
         if (!cancelled) {
+          progressMapRef.current = progress;
           setProgressMap(progress);
         }
       } catch (progressError) {
@@ -84,13 +91,17 @@ export const useProblemProgress = (uid?: string | null) => {
         return;
       }
 
-      const current = progressMap[problem.problemId] ?? emptyProgress(problem.problemId);
+      const current =
+        progressMapRef.current[problem.problemId] ?? emptyProgress(problem.problemId);
       const next = updater(current);
 
-      setProgressMap((previous) => ({
-        ...previous,
+      const optimisticProgress = {
+        ...progressMapRef.current,
         [problem.problemId]: next,
-      }));
+      };
+
+      progressMapRef.current = optimisticProgress;
+      setProgressMap(optimisticProgress);
 
       try {
         await saveProblemProgress(uid, next);
@@ -100,10 +111,13 @@ export const useProblemProgress = (uid?: string | null) => {
           await updateDailyActivity(uid, getActivityDate(), activityDelta);
         }
       } catch (progressError) {
-        setProgressMap((previous) => ({
-          ...previous,
+        const revertedProgress = {
+          ...progressMapRef.current,
           [problem.problemId]: current,
-        }));
+        };
+
+        progressMapRef.current = revertedProgress;
+        setProgressMap(revertedProgress);
         setError(
           progressError instanceof Error
             ? progressError.message
@@ -111,7 +125,7 @@ export const useProblemProgress = (uid?: string | null) => {
         );
       }
     },
-    [progressMap, uid]
+    [uid]
   );
 
   const toggleSolved = useCallback(
