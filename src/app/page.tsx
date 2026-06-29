@@ -21,6 +21,7 @@ const Page = () => {
     const {
         user,
         loading: authLoading,
+        error: authError,
         isConfigured: isAuthConfigured,
         login,
         logout,
@@ -34,6 +35,7 @@ const Page = () => {
     const {
         progressMap,
         loading: progressLoading,
+        error: progressError,
         toggleSolved,
         toggleAttempted,
         toggleBookmarked,
@@ -107,6 +109,8 @@ const Page = () => {
             <div className="p-4">
                 {loading && <div className="text-center text-gray-500">Loading...</div>}
                 {error && <div className="text-center text-red-500">{error}</div>}
+                {authError && <div className="text-center text-red-500">{authError}</div>}
+                {progressError && <div className="text-center text-red-500">{progressError}</div>}
                 <DashboardStats questions={formattedQuestions} progressMap={progressMap} />
                 <Heatmap uid={user?.uid} />
                 <QuestionTable

@@ -1,0 +1,81 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function validUserProfile(uid) {
+      return request.resource.data.keys().hasOnly([
+        'uid',
+        'displayName',
+        'email',
+        'photoURL',
+        'createdAt',
+        'updatedAt',
+        'lastLoginAt'
+      ])
+      && request.resource.data.uid == uid
+      && (!('displayName' in request.resource.data) || request.resource.data.displayName is string || request.resource.data.displayName == null)
+      && (!('email' in request.resource.data) || request.resource.data.email is string || request.resource.data.email == null)
+      && (!('photoURL' in request.resource.data) || request.resource.data.photoURL is string || request.resource.data.photoURL == null);
+    }
+
+    function validProgress(problemId) {
+      return request.resource.data.keys().hasOnly([
+        'problemId',
+        'solved',
+        'attempted',
+        'bookmarked',
+        'inRevisionList',
+        'notes',
+        'solvedAt',
+        'attemptedAt',
+        'bookmarkedAt',
+        'revisionAddedAt',
+        'updatedAt'
+      ])
+      && request.resource.data.problemId == problemId
+      && (!('solved' in request.resource.data) || request.resource.data.solved is bool)
+      && (!('attempted' in request.resource.data) || request.resource.data.attempted is bool)
+      && (!('bookmarked' in request.resource.data) || request.resource.data.bookmarked is bool)
+      && (!('inRevisionList' in request.resource.data) || request.resource.data.inRevisionList is bool)
+      && (!('notes' in request.resource.data) || (request.resource.data.notes is string && request.resource.data.notes.size() <= 4000));
+    }
+
+    function validActivity(date) {
+      return request.resource.data.keys().hasOnly([
+        'date',
+        'solvedCount',
+        'attemptedCount',
+        'updatedAt'
+      ])
+      && request.resource.data.date == date
+      && (!('solvedCount' in request.resource.data) || request.resource.data.solvedCount is number)
+      && (!('attemptedCount' in request.resource.data) || request.resource.data.attemptedCount is number);
+    }
+
+    match /users/{uid} {
+      allow read: if owns(uid);
+      allow create, update: if owns(uid) && validUserProfile(uid);
+      allow delete: if false;
+
+      match /progress/{problemId} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && validProgress(problemId);
+        allow delete: if owns(uid);
+      }
+
+      match /activity/{date} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && validActivity(date);
+        allow delete: if false;
+      }
+    }
+  }
+}

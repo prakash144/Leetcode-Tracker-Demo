@@ -26,9 +26,38 @@ A sleek and simple web app to track your LeetCode problem-solving progress. Easi
 ## 🛠️ Tech Stack
 
 - **Frontend:** Next.js
-- **State Management:** Redux / Zustand / Context API
+- **State Management:** React hooks
 - **Styling:** Tailwind CSS / Styled Components
-- **Data Source:** Open-source API (frequently updated, including premium problems)
+- **Data Source:** Dynamic GitHub CSV/API problem metadata
+- **Persistence:** Firebase Authentication and Cloud Firestore for user progress
 - **Deployment:** GitHub Pages
 
 ---
+
+## Firebase Setup
+
+The app is still statically hosted on GitHub Pages. Firebase is used from the client SDK only.
+
+Create `.env.local` from `.env.example`:
+
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+Firestore stores only user-specific progress:
+
+- solved
+- attempted
+- bookmarked
+- revision list
+- notes
+- activity counts for the heatmap
+
+Problem metadata such as title, link, acceptance, difficulty, frequency, topic, company, and list continues to come from the GitHub CSV/API source.
+
+Deploy the rules in `firestore.rules` to protect per-user progress data.
