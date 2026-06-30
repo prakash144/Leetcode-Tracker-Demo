@@ -47,15 +47,15 @@ const NotesDialog = ({
                 <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 text-xs text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+                    className="h-8 text-xs text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent"
                 >
                     Notes
                 </Button>
             </Dialog.Trigger>
             {!disabled && (
                 <Dialog.Portal>
-                    <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-                    <Dialog.Content className="fixed top-1/2 left-1/2 max-w-md w-full bg-zinc-900 border border-zinc-700 text-white p-6 rounded-lg -translate-x-1/2 -translate-y-1/2 z-50">
+                    <Dialog.Overlay className="fixed inset-0 bg-background/80 z-40" />
+                    <Dialog.Content className="fixed top-1/2 left-1/2 max-w-md w-full bg-card border border-border text-foreground p-6 rounded-lg -translate-x-1/2 -translate-y-1/2 z-50">
                         <Dialog.Title className="text-lg font-semibold mb-3">
                             Notes
                         </Dialog.Title>
@@ -64,14 +64,14 @@ const NotesDialog = ({
                             onChange={(event) => setDraft(event.target.value)}
                             maxLength={4000}
                             aria-label="Notes"
-                            className="w-full h-40 resize-none rounded-md border border-zinc-700 bg-zinc-800 p-3 text-sm text-white placeholder:text-zinc-400 focus:outline-none"
+                            className="w-full h-40 resize-none rounded-md border border-border bg-secondary p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                             placeholder={`Notes for ${problem.title}`}
                         />
                         <div className="flex justify-end gap-2 mt-4">
                             <Dialog.Close asChild>
                                 <Button
                                     variant="outline"
-                                    className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+                                    className="text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent"
                                 >
                                     Close
                                 </Button>
@@ -80,7 +80,7 @@ const NotesDialog = ({
                                 <Button
                                     onClick={handleSave}
                                     variant="outline"
-                                    className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+                                    className="text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent"
                                 >
                                     Save
                                 </Button>

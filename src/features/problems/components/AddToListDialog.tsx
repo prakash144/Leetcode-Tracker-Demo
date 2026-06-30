@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Check, ListPlus, Loader2, Plus, Search, X } from "lucide-react";
+import { Check, FolderKanban, ListPlus, Loader2, Plus, Search, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -75,39 +75,49 @@ const AddToListDialog = ({
     setShowNew(false);
   };
 
+  const listCount = containedIn.length;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors border border-transparent hover:border-zinc-700/50"
+          className="group relative inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all border border-transparent hover:border-border/60 hover:bg-accent/60 hover:text-card-foreground text-muted-foreground"
           aria-label={`Add ${problemTitle} to list`}
         >
-          <ListPlus className="size-3.5" />
-          <span className="hidden sm:inline">Add to List</span>
+          <ListPlus className="size-3.5 transition-transform group-hover:scale-110" />
+          <span>List</span>
+          {listCount > 0 && (
+            <span className="flex items-center justify-center size-4 rounded-full bg-success/15 text-success text-[10px] font-semibold leading-none">
+              {listCount}
+            </span>
+          )}
         </button>
       </DialogTrigger>
-      <DialogContent className="border-zinc-700 bg-zinc-900 text-white sm:max-w-sm gap-0 p-0">
-        <DialogHeader className="px-4 pt-4 pb-3 border-b border-zinc-800">
-          <DialogTitle className="text-sm font-semibold text-white">
-            Add to List
-          </DialogTitle>
-          <p className="text-xs text-zinc-500 truncate mt-0.5">{problemTitle}</p>
-          <div className="relative mt-2">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
+      <DialogContent className="border-border bg-card text-foreground sm:max-w-sm gap-0 p-0 shadow-2xl">
+        <DialogHeader className="px-4 pt-4 pb-3 border-b border-border">
+          <div className="flex items-center gap-2 mb-0.5">
+            <FolderKanban className="size-4 text-muted-foreground shrink-0" />
+            <DialogTitle className="text-sm font-semibold text-foreground">
+              Add to List
+            </DialogTitle>
+          </div>
+          <p className="text-xs text-muted-foreground truncate pl-6">{problemTitle}</p>
+          <div className="relative mt-2.5">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               placeholder="Search lists..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-800 pl-8 pr-8 py-1.5 text-sm text-white placeholder-zinc-500 focus:border-green-500 focus:outline-none transition-colors"
+              className="w-full rounded-lg border border-border bg-secondary pl-8 pr-8 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-success/50 focus:ring-1 focus:ring-success/20 focus:outline-none transition-all"
               autoComplete="off"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-accent"
               >
                 <X className="size-3.5" />
               </button>
@@ -115,15 +125,26 @@ const AddToListDialog = ({
           </div>
         </DialogHeader>
 
-        <div className="max-h-60 overflow-y-auto px-1 py-1">
+        <div className="max-h-64 overflow-y-auto py-1.5 px-1.5 scrollbar-thin-dark">
           {lists.length === 0 && !showNew ? (
-            <div className="flex flex-col items-center gap-2 py-8 text-center">
-              <ListPlus className="size-8 text-zinc-600" />
-              <p className="text-xs text-zinc-500">No lists yet. Create one to get started.</p>
+            <div className="flex flex-col items-center gap-3 py-10 text-center px-4">
+              <div className="size-10 rounded-full bg-secondary flex items-center justify-center">
+                <FolderKanban className="size-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">No lists yet</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Create one to organize this problem.</p>
+              </div>
             </div>
           ) : filteredLists.length === 0 && search ? (
-            <div className="py-6 text-center">
-              <p className="text-xs text-zinc-500">No lists matching &ldquo;{search}&rdquo;</p>
+            <div className="py-8 text-center px-4">
+              <div className="size-8 rounded-full bg-secondary flex items-center justify-center mx-auto mb-2">
+                <Search className="size-4 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-foreground font-medium">No results</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                No lists matching &ldquo;{search}&rdquo;
+              </p>
             </div>
           ) : (
             <div className="space-y-0.5">
@@ -136,17 +157,17 @@ const AddToListDialog = ({
                     type="button"
                     disabled={loading}
                     onClick={() => toggleList(list.id)}
-                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-all ${
                       checked
-                        ? "bg-green-500/10 text-green-300"
-                        : "text-zinc-300 hover:bg-zinc-800/80"
-                    } ${loading ? "opacity-50 cursor-wait" : "cursor-pointer"}`}
+                        ? "bg-success/8 text-success"
+                        : "text-foreground hover:bg-accent/60"
+                    } ${loading ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
                   >
                     <span
-                      className={`flex size-4 shrink-0 items-center justify-center rounded border transition-colors ${
+                      className={`flex size-4.5 shrink-0 items-center justify-center rounded border transition-all duration-150 ${
                         checked
-                          ? "border-green-500 bg-green-500 text-black"
-                          : "border-zinc-600 bg-zinc-800"
+                          ? "border-success bg-success text-primary-foreground"
+                          : "border-border bg-secondary group-hover:border-foreground/30"
                       }`}
                     >
                       {loading ? (
@@ -156,14 +177,16 @@ const AddToListDialog = ({
                       ) : null}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <span className="block truncate">{list.name}</span>
+                      <span className="block truncate font-medium leading-tight">{list.name}</span>
                       {list.description && (
-                        <span className="block text-xs text-zinc-600 truncate mt-0.5">
+                        <span className="block text-xs text-muted-foreground truncate mt-0.5 leading-tight">
                           {list.description}
                         </span>
                       )}
                     </div>
-                    <span className="ml-2 text-xs text-zinc-500 shrink-0">{list.problemIds.length}</span>
+                    <span className="flex items-center justify-center size-5 rounded-md bg-secondary text-[11px] font-medium text-muted-foreground shrink-0">
+                      {list.problemIds.length}
+                    </span>
                   </button>
                 );
               })}
@@ -171,15 +194,15 @@ const AddToListDialog = ({
           )}
 
           {showNew && (
-            <div className="border-t border-zinc-800 px-3 py-3 mt-1">
-              <div className="flex gap-2 mb-2">
+            <div className="border-t border-border mx-0 mt-2 pt-3 pb-1 px-2 space-y-2.5">
+              <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder="List name"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCreateNew()}
-                  className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-sm text-white placeholder-zinc-500 focus:border-green-500 focus:outline-none transition-colors"
+                  className="flex-1 rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-success/50 focus:ring-1 focus:ring-success/20 focus:outline-none transition-all"
                   autoFocus
                 />
                 <Button
@@ -187,7 +210,7 @@ const AddToListDialog = ({
                   size="sm"
                   disabled={!newName.trim()}
                   onClick={handleCreateNew}
-                  className="bg-green-500 text-black hover:bg-green-400 h-8 px-3 text-xs shrink-0"
+                  className="bg-success text-primary-foreground hover:bg-green-400 h-9 px-4 text-xs font-semibold shrink-0 rounded-lg"
                 >
                   Create
                 </Button>
@@ -198,21 +221,21 @@ const AddToListDialog = ({
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreateNew()}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-sm text-white placeholder-zinc-500 focus:border-green-500 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-success/50 focus:ring-1 focus:ring-success/20 focus:outline-none transition-all"
               />
             </div>
           )}
         </div>
 
         {!showNew && (
-          <div className="border-t border-zinc-800 px-3 py-2">
+          <div className="border-t border-border px-3 py-2.5">
             <button
               type="button"
               onClick={() => setShowNew(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors"
+              className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-card-foreground hover:bg-accent/60 transition-all border border-dashed border-border/60 hover:border-border"
             >
               <Plus className="size-4" />
-              Create new list
+              New list
             </button>
           </div>
         )}

@@ -62,7 +62,7 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
             <Dialog.Trigger asChild>
                 <Button
                     variant="outline"
-                    className="max-w-[12rem] justify-between truncate text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md sm:max-w-xs"
+                    className="max-w-[12rem] justify-between truncate text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent cursor-pointer transition-colors duration-150 rounded-md sm:max-w-xs"
                     aria-label="Open company selector"
                 >
                     <span className="truncate">{selectedCompany || "Select Company"}</span>
@@ -71,8 +71,8 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
             </Dialog.Trigger>
 
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-hidden bg-zinc-900 border border-zinc-700 text-white p-4 rounded-xl -translate-x-1/2 -translate-y-1/2 z-50 sm:p-6">
+                <Dialog.Overlay className="fixed inset-0 bg-background/80 z-40" />
+                <Dialog.Content className="fixed top-1/2 left-1/2 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-hidden bg-card border border-border text-foreground p-4 rounded-xl -translate-x-1/2 -translate-y-1/2 z-50 sm:p-6">
                     <Dialog.Title className="text-xl font-semibold mb-2">Select a Company</Dialog.Title>
 
                     {/* Search Box */}
@@ -88,7 +88,7 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
                     <ScrollArea className="h-64 pr-2 mt-4 space-y-4">
                         {Object.entries(companies).map(([category, companyList]) => (
                             <div key={category}>
-                                <h3 className="text-sm text-zinc-400 font-medium mb-1">{category}</h3>
+                                <h3 className="text-sm text-muted-foreground font-medium mb-1">{category}</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {companyList.map((company) => (
                                         <button
@@ -98,8 +98,8 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
                                             aria-pressed={selectedCompany === company}
                                             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full border cursor-pointer transition-colors duration-200 ${
                                                 selectedCompany === company
-                                                    ? "bg-green-600 text-white border-green-500"
-                                                    : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
+                                                    ? "bg-success text-foreground border-success"
+                                                    : "bg-secondary border-border hover:bg-accent"
                                             }`}
                                         >
                                             <CompanyLogo company={company} size="sm" />
@@ -116,14 +116,14 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
                         <Button
                             onClick={clearSelection}
                             variant="outline"
-                            className="flex-1 text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+                            className="flex-1 text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent"
                         >
                             Clear
                         </Button>
                         <Dialog.Close asChild>
                             <Button
                                 variant="outline"
-                                className="flex-1 text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+                                className="flex-1 text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent"
                             >
                                 Close
                             </Button>

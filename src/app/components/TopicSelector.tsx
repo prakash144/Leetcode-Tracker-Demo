@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState, useCallback } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
             <Dialog.Trigger asChild>
                 <Button
                     variant="outline"
-                    className="max-w-[14rem] justify-between truncate text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md sm:max-w-xs"
+                    className="max-w-[14rem] justify-between truncate text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent cursor-pointer transition-colors duration-150 rounded-md sm:max-w-xs"
                     aria-label="Open topic selector"
                 >
                     <span className="truncate">
@@ -95,21 +96,21 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
             </Dialog.Trigger>
 
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/60" />
+                <Dialog.Overlay className="fixed inset-0 bg-background/80" />
                 <Dialog.Content
-                    className="fixed top-1/2 left-1/2 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-hidden bg-zinc-900 border border-zinc-700 text-white p-4 rounded-xl -translate-x-1/2 -translate-y-1/2 z-50 sm:p-6">
-                    <div className="p-4 border-b border-zinc-700">
+                    className="fixed top-1/2 left-1/2 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-hidden bg-card border border-border text-foreground p-4 rounded-xl -translate-x-1/2 -translate-y-1/2 z-50 sm:p-6">
+                    <div className="p-4 border-b border-border">
                         <Dialog.Title asChild>
-                            <h2 className="text-xl font-semibold text-white">Topics</h2>
+                            <h2 className="text-xl font-semibold text-foreground">Topics</h2>
                         </Dialog.Title>
-                        <p className="text-sm text-zinc-400">Choose multiple topics from the list below.</p>
+                        <p className="text-sm text-muted-foreground">Choose multiple topics from the list below.</p>
                     </div>
 
                     <div className="mb-4 p-2">
                         <input
                             type="text"
                             placeholder="Search Topics"
-                            className="w-full p-2 text-sm text-zinc-800 bg-zinc-200 rounded-md focus:outline-none"
+                            className="w-full p-2 text-sm text-foreground bg-secondary rounded-md focus:outline-none"
                             value={searchQuery}
                             onChange={handleSearchChange}
                             aria-label="Search topics"
@@ -120,7 +121,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
                         {filteredTopics.map(({ category, subtopics }) => (
                             subtopics.length > 0 && (
                                 <div key={category} className="mb-6">
-                                    <h3 className="text-lg font-semibold text-white mb-2">{category}</h3>
+                                    <h3 className="text-lg font-semibold text-foreground mb-2">{category}</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {subtopics.map((topic) => (
                                             <button
@@ -130,8 +131,8 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
                                                 aria-pressed={selectedTopic.has(topic)}
                                                 className={`px-3 py-1 text-xs rounded-full cursor-pointer transition-all duration-200 ease-in-out border ${
                                                     selectedTopic.has(topic)
-                                                        ? "bg-green-600 text-white border-green-500"
-                                                        : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
+                                                        ? "bg-success text-foreground border-success"
+                                                        : "bg-secondary border-border hover:bg-accent"
                                                 }`}
                                                 aria-label={selectedTopic.has(topic) ? `Deselect ${topic}` : `Select ${topic}`}
                                             >
@@ -148,14 +149,14 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
                         <Button
                             onClick={handleClearSelection}
                             variant="outline"
-                            className="flex-1 text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+                            className="flex-1 text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent"
                         >
                             Clear
                         </Button>
                         <Dialog.Close asChild>
                             <Button
                                 variant="outline"
-                                className="flex-1 text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+                                className="flex-1 text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent"
                             >
                                 Close
                             </Button>

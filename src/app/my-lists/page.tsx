@@ -79,7 +79,7 @@ const MyListsPage = () => {
             <Button
               type="button"
               onClick={() => setShowCreate(true)}
-              className="bg-green-500 text-black hover:bg-green-400"
+              className="bg-success text-primary-foreground hover:bg-green-400"
             >
               <Plus className="size-4" />
               New List
@@ -90,9 +90,9 @@ const MyListsPage = () => {
 
       <div className="mx-auto max-w-7xl space-y-6 p-4 sm:px-6 lg:px-8 pb-12">
         {!auth.user && (
-          <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/70 px-4 py-12 text-center">
-            <FolderKanban className="mx-auto size-10 text-zinc-600 mb-3" />
-            <p className="text-sm text-zinc-400">Sign in to create and manage custom problem lists.</p>
+          <div className="rounded-xl border border-dashed border-border bg-card/70 px-4 py-12 text-center">
+            <FolderKanban className="mx-auto size-10 text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground">Sign in to create and manage custom problem lists.</p>
           </div>
         )}
 
@@ -102,13 +102,13 @@ const MyListsPage = () => {
         {auth.user && !loading && !error && (
           <>
             {showCreate && (
-              <section className="rounded-xl border border-green-500/30 bg-green-500/5 p-5">
+              <section className="rounded-xl border border-success/30 bg-success/5 p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-white">New List</h3>
+                  <h3 className="text-sm font-semibold text-foreground">New List</h3>
                   <button
                     type="button"
                     onClick={() => setShowCreate(false)}
-                    className="text-zinc-500 hover:text-zinc-300"
+                    className="text-muted-foreground hover:text-foreground"
                     aria-label="Cancel"
                   >
                     <X className="size-4" />
@@ -121,7 +121,7 @@ const MyListsPage = () => {
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-green-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none"
                     autoFocus
                   />
                   <input
@@ -129,14 +129,14 @@ const MyListsPage = () => {
                     placeholder="Description (optional)"
                     value={newDesc}
                     onChange={(e) => setNewDesc(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-green-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none"
                   />
                   <Button
                     type="button"
                     size="sm"
                     disabled={!newName.trim()}
                     onClick={handleCreate}
-                    className="bg-green-500 text-black hover:bg-green-400"
+                    className="bg-success text-primary-foreground hover:bg-green-400"
                   >
                     <ListPlus className="size-4" />
                     Create List
@@ -146,9 +146,9 @@ const MyListsPage = () => {
             )}
 
             {lists.length === 0 && !showCreate && (
-              <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/70 px-4 py-12 text-center">
-                <FolderKanban className="mx-auto size-10 text-zinc-600 mb-3" />
-                <p className="text-sm text-zinc-400">No lists yet. Create your first list to start organizing problems.</p>
+              <div className="rounded-xl border border-dashed border-border bg-card/70 px-4 py-12 text-center">
+                <FolderKanban className="mx-auto size-10 text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">No lists yet. Create your first list to start organizing problems.</p>
               </div>
             )}
 
@@ -158,7 +158,7 @@ const MyListsPage = () => {
                 return (
                   <div
                     key={list.id}
-                    className="flex flex-col rounded-xl border border-zinc-800 bg-zinc-900/80 p-5"
+                    className="flex flex-col rounded-xl border border-border bg-card/80 p-5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       {editingId === list.id ? (
@@ -168,23 +168,23 @@ const MyListsPage = () => {
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleRename(list.id)}
-                            className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-sm text-white focus:border-green-500 focus:outline-none"
+                            className="flex-1 rounded-md border border-border bg-secondary px-2 py-1 text-sm text-foreground focus:border-green-500 focus:outline-none"
                             autoFocus
                           />
                           <Button
                             type="button"
                             size="sm"
                             onClick={() => handleRename(list.id)}
-                            className="bg-green-500 text-black h-7 px-2 text-xs hover:bg-green-400"
+                            className="bg-success text-primary-foreground h-7 px-2 text-xs hover:bg-green-400"
                           >
                             Save
                           </Button>
                         </div>
                       ) : (
                         <div className="min-w-0 flex-1">
-                          <h3 className="truncate text-sm font-semibold text-white">{list.name}</h3>
+                          <h3 className="truncate text-sm font-semibold text-foreground">{list.name}</h3>
                           {list.description && (
-                            <p className="mt-0.5 truncate text-xs text-zinc-500">{list.description}</p>
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground">{list.description}</p>
                           )}
                         </div>
                       )}
@@ -193,7 +193,7 @@ const MyListsPage = () => {
                           <button
                             type="button"
                             onClick={() => { setEditingId(list.id); setEditName(list.name); }}
-                            className="rounded p-1 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
+                            className="rounded p-1 text-muted-foreground hover:text-foreground hover:bg-accent"
                             aria-label="Rename list"
                           >
                             <PencilLine className="size-3.5" />
@@ -202,7 +202,7 @@ const MyListsPage = () => {
                         <button
                           type="button"
                           onClick={() => handleDelete(list.id)}
-                          className="rounded p-1 text-zinc-500 hover:text-red-400 hover:bg-zinc-800"
+                          className="rounded p-1 text-muted-foreground hover:text-destructive hover:bg-accent"
                           aria-label="Delete list"
                         >
                           <Trash2 className="size-3.5" />
@@ -210,21 +210,21 @@ const MyListsPage = () => {
                       </div>
                     </div>
 
-                    <div className="mt-4 flex items-center gap-3 text-xs text-zinc-500">
+                    <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
                       <span>
-                        <span className="text-zinc-200 font-medium">{list.problemIds.length}</span> problems
+                        <span className="text-card-foreground font-medium">{list.problemIds.length}</span> problems
                       </span>
                       {visibleCount > 0 && (
                         <span>
-                          <span className="text-green-400 font-medium">{visibleCount}</span> in dataset
+                          <span className="text-success font-medium">{visibleCount}</span> in dataset
                         </span>
                       )}
                     </div>
 
                     {list.problemIds.length > 0 && (
-                      <div className="mt-3 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                      <div className="mt-3 h-1.5 rounded-full bg-secondary overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-green-500"
+                          className="h-full rounded-full bg-success"
                           style={{ width: `${Math.min(100, (visibleCount / Math.max(list.problemIds.length, 1)) * 100)}%` }}
                         />
                       </div>
@@ -236,7 +236,7 @@ const MyListsPage = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 h-7 text-xs"
+                        className="border-border bg-secondary text-card-foreground hover:bg-accent h-7 text-xs"
                       >
                         <a href="/problems" className="inline-flex items-center gap-1.5">
                           <ExternalLink className="size-3" />

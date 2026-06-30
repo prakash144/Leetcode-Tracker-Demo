@@ -96,30 +96,30 @@ const QuestionTable = ({
     return (
         <div className="space-y-4">
             {/* ✅ Count Summary Section */}
-            <div className="flex flex-wrap gap-4 text-sm font-medium text-zinc-300">
-                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+            <div className="flex flex-wrap gap-4 text-sm font-medium text-foreground">
+                <div className="bg-secondary px-3 py-1.5 rounded-lg border border-border">
                     Dataset: {questions.length}
                 </div>
-                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                <div className="bg-secondary px-3 py-1.5 rounded-lg border border-border">
                     Filtered: {filteredQuestions.length}
                 </div>
-                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                <div className="bg-secondary px-3 py-1.5 rounded-lg border border-border">
                     Page: {range.from}-{range.to}
                 </div>
-                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                <div className="bg-secondary px-3 py-1.5 rounded-lg border border-border">
                     Solved: {filteredSolved.length}
                 </div>
-                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                <div className="bg-secondary px-3 py-1.5 rounded-lg border border-border">
                     Attempted: {filteredAttempted.length}
                 </div>
-                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                <div className="bg-secondary px-3 py-1.5 rounded-lg border border-border">
                     Bookmarked: {filteredBookmarked.length}
                 </div>
-                <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                <div className="bg-secondary px-3 py-1.5 rounded-lg border border-border">
                     Revision: {filteredRevision.length}
                 </div>
                 {progressLoading && (
-                    <div className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                    <div className="bg-secondary px-3 py-1.5 rounded-lg border border-border">
                         Syncing...
                     </div>
                 )}
@@ -152,8 +152,8 @@ const QuestionTable = ({
             {sortedProblems.length > 0 && (
             <>
             <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-zinc-300" aria-label="Problems table">
-                <thead className="sticky top-0 z-10 text-xs uppercase bg-zinc-900 text-zinc-500 border-b border-zinc-700">
+            <table className="w-full text-sm text-left text-foreground" aria-label="Problems table">
+                <thead className="sticky top-0 z-10 text-xs uppercase bg-card text-muted-foreground border-b border-border">
                 <tr>
                     <th className="px-4 py-3">#</th>
                     <th className="px-4 py-3">Title</th>
@@ -164,7 +164,7 @@ const QuestionTable = ({
                     >
                         Acceptance
                         {sortBy === "acceptanceRate" && (
-                            <span className={sortDirection === "asc" ? "text-green-400" : "text-red-400"}>
+                            <span className={sortDirection === "asc" ? "text-success" : "text-destructive"}>
                                     {sortDirection === "asc" ? "↑" : "↓"}
                                 </span>
                         )}
@@ -177,7 +177,7 @@ const QuestionTable = ({
                     >
                         Frequency
                         {sortBy === "frequency" && (
-                            <span className={sortDirection === "asc" ? "text-green-400" : "text-red-400"}>
+                            <span className={sortDirection === "asc" ? "text-success" : "text-destructive"}>
                                     {sortDirection === "asc" ? "↑" : "↓"}
                                 </span>
                         )}
@@ -196,10 +196,10 @@ const QuestionTable = ({
                     const progress = progressMap[q.problemId];
 
                     return (
-                    <tr key={`${q.company}-${q.list}-${q.problemId}`} className="bg-zinc-800 border-b border-zinc-700 transition-colors duration-150 hover:bg-zinc-700/40">
-                        <td className="px-4 py-3 text-zinc-400">{range.from + index}</td>
+                    <tr key={`${q.company}-${q.list}-${q.problemId}`} className="bg-secondary border-b border-border transition-colors duration-150 hover:bg-accent/40">
+                        <td className="px-4 py-3 text-muted-foreground">{range.from + index}</td>
                         <td className="px-4 py-3 font-medium">
-                            <a href={q.link} target="_blank" rel="noopener noreferrer" title={q.title} className="text-white hover:text-blue-500 transition-colors">
+                            <a href={q.link} target="_blank" rel="noopener noreferrer" title={q.title} className="text-foreground hover:text-info transition-colors">
                                 {q.title}
                             </a>
                         </td>
@@ -226,7 +226,7 @@ const QuestionTable = ({
                                 aria-label={progress?.solved ? "Mark as unsolved" : "Mark as solved"}
                                 checked={Boolean(progress?.solved)}
                                 onChange={() => requireProgressOrRun(() => onToggleSolved(q))}
-                                className="form-checkbox rounded-full bg-zinc-700 border-zinc-600 text-green-500 cursor-pointer"
+                                className="form-checkbox rounded-full bg-muted border-border text-success cursor-pointer"
                             />
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -236,7 +236,7 @@ const QuestionTable = ({
                                 aria-label={progress?.attempted ? "Remove attempt" : "Mark as attempted"}
                                 checked={Boolean(progress?.attempted)}
                                 onChange={() => requireProgressOrRun(() => onToggleAttempted(q))}
-                                className="form-checkbox rounded-full bg-zinc-700 border-zinc-600 text-blue-500 cursor-pointer"
+                                className="form-checkbox rounded-full bg-muted border-border text-info cursor-pointer"
                             />
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -248,8 +248,8 @@ const QuestionTable = ({
                                 aria-pressed={Boolean(progress?.bookmarked)}
                                 className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                                     progress?.bookmarked
-                                        ? "bg-yellow-400/10 text-yellow-300"
-                                        : "text-zinc-400 hover:bg-zinc-700 hover:text-yellow-300"
+                                        ? "bg-yellow-400/10 text-warning"
+                                        : "text-muted-foreground hover:bg-accent hover:text-warning"
                                 }`}
                             >
                                 <Star className={`size-4 ${progress?.bookmarked ? "fill-yellow-400 text-yellow-400" : ""}`} />
@@ -263,7 +263,7 @@ const QuestionTable = ({
                                 onClick={() => requireProgressOrRun(() => onToggleRevision(q))}
                                 title="Toggle revision"
                                 aria-label={progress?.inRevisionList ? "Remove from revision list" : "Add to revision list"}
-                                className={progress?.inRevisionList ? "text-cyan-400" : "text-zinc-400"}
+                                className={progress?.inRevisionList ? "text-cyan-400" : "text-muted-foreground"}
                             >
                                 <RotateCcw size={18} />
                             </button>

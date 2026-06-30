@@ -296,13 +296,13 @@ const ProgressPage = () => {
       />
 
       <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8 pb-12">
-        {hasError && <ErrorState message={hasError} />}
+        {hasError && typeof hasError === "string" && <ErrorState message={hasError} />}
         {isLoading && <LoadingState message="Loading progress data..." />}
 
         {!auth.user && !isLoading && (
-          <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/70 px-4 py-12 text-center">
-            <Clock className="mx-auto size-10 text-zinc-600 mb-3" />
-            <p className="text-sm text-zinc-400">Sign in to track your practice history and progress.</p>
+          <div className="rounded-xl border border-dashed border-border bg-card/70 px-4 py-12 text-center">
+            <Clock className="mx-auto size-10 text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground">Sign in to track your practice history and progress.</p>
           </div>
         )}
 
@@ -311,19 +311,20 @@ const ProgressPage = () => {
             <div className="flex-1 min-w-0 space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative flex-1 min-w-[160px] max-w-xs">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
                   <input
                     type="text"
                     placeholder="Search problems..."
                     value={search}
                     onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-800 pl-8 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-green-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border bg-secondary pl-8 pr-8 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none"
                   />
                   {search && (
                     <button
                       type="button"
                       onClick={() => setSearch("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label="Clear search"
                     >
                       <X className="size-3" />
                     </button>
@@ -332,7 +333,7 @@ const ProgressPage = () => {
                 <select
                   value={difficultyFilter}
                   onChange={(e) => { setDifficultyFilter(e.target.value); setCurrentPage(1); }}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 focus:border-green-500 focus:outline-none"
+                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-green-500 focus:outline-none"
                 >
                   <option value="all">All Difficulties</option>
                   <option value="Easy">Easy</option>
@@ -342,7 +343,7 @@ const ProgressPage = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 focus:border-green-500 focus:outline-none"
+                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-green-500 focus:outline-none"
                 >
                   <option value="all">All Status</option>
                   <option value="solved">Solved</option>
@@ -352,7 +353,7 @@ const ProgressPage = () => {
                 <select
                   value={companyFilter}
                   onChange={(e) => { setCompanyFilter(e.target.value); setCurrentPage(1); }}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 max-w-[140px] focus:border-green-500 focus:outline-none"
+                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground max-w-[140px] focus:border-green-500 focus:outline-none"
                 >
                   <option value="all">All Companies</option>
                   {companies.map((c) => (<option key={c} value={c}>{c}</option>))}
@@ -360,32 +361,32 @@ const ProgressPage = () => {
                 <select
                   value={topicFilter}
                   onChange={(e) => { setTopicFilter(e.target.value); setCurrentPage(1); }}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 max-w-[140px] focus:border-green-500 focus:outline-none"
+                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground max-w-[140px] focus:border-green-500 focus:outline-none"
                 >
                   <option value="all">All Topics</option>
                   {topics.slice(0, 30).map((t) => (<option key={t} value={t}>{t}</option>))}
                   {topics.length > 30 && <option disabled>— more —</option>}
                 </select>
-                <span className="text-xs text-zinc-500 ml-auto">{sorted.length} result{sorted.length !== 1 ? "s" : ""}</span>
+                <span className="text-xs text-muted-foreground ml-auto">{sorted.length} result{sorted.length !== 1 ? "s" : ""}</span>
               </div>
 
               {hasFilteredResults ? (
-                <div className="overflow-x-auto rounded-xl border border-zinc-800">
-                  <table className="w-full text-sm text-left text-zinc-300" aria-label="Practice history">
-                    <thead className="sticky top-0 bg-zinc-900 text-xs uppercase text-zinc-500 border-b border-zinc-800 z-10">
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="w-full text-sm text-left text-foreground" aria-label="Practice history">
+                    <thead className="sticky top-0 bg-card text-xs uppercase text-muted-foreground border-b border-border z-10">
                       <tr>
                         <th className="px-4 py-3">
-                          <button type="button" onClick={() => toggleSort("lastSubmitted")} className="inline-flex items-center hover:text-zinc-300 transition-colors">
+                          <button type="button" onClick={() => toggleSort("lastSubmitted")} className="inline-flex items-center hover:text-foreground transition-colors">
                             Last Submitted <SortIcon field="lastSubmitted" />
                           </button>
                         </th>
                         <th className="px-4 py-3">
-                          <button type="button" onClick={() => toggleSort("title")} className="inline-flex items-center hover:text-zinc-300 transition-colors">
+                          <button type="button" onClick={() => toggleSort("title")} className="inline-flex items-center hover:text-foreground transition-colors">
                             Problem <SortIcon field="title" />
                           </button>
                         </th>
                         <th className="px-4 py-3">
-                          <button type="button" onClick={() => toggleSort("difficulty")} className="inline-flex items-center hover:text-zinc-300 transition-colors">
+                          <button type="button" onClick={() => toggleSort("difficulty")} className="inline-flex items-center hover:text-foreground transition-colors">
                             Difficulty <SortIcon field="difficulty" />
                           </button>
                         </th>
@@ -395,10 +396,10 @@ const ProgressPage = () => {
                     </thead>
                     <tbody>
                       {paginated.map((entry) => (
-                        <tr key={entry.problem.problemId} className="border-b border-zinc-800 bg-zinc-900/50 transition-colors hover:bg-zinc-800/50">
-                          <td className="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap">{formatRelativeTime(entry.lastDate)}</td>
+                        <tr key={entry.problem.problemId} className="border-b border-border bg-zinc-900/50 transition-colors hover:bg-secondary/50">
+                          <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{formatRelativeTime(entry.lastDate)}</td>
                           <td className="px-4 py-3 font-medium">
-                            <a href={entry.problem.link} target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400 transition-colors">
+                            <a href={entry.problem.link} target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-info transition-colors">
                               {entry.problem.title}
                             </a>
                           </td>
@@ -407,12 +408,12 @@ const ProgressPage = () => {
                             {entry.problem.company ? (
                               <span className="inline-flex items-center gap-1.5">
                                 <CompanyLogo company={entry.problem.company} size="sm" />
-                                <span className="text-xs text-zinc-500">{entry.problem.company}</span>
+                                <span className="text-xs text-muted-foreground">{entry.problem.company}</span>
                               </span>
-                            ) : (<span className="text-xs text-zinc-600">—</span>)}
+                            ) : (<span className="text-xs text-muted-foreground">—</span>)}
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex items-center gap-1 text-xs font-medium ${entry.progress.solved ? "text-green-400" : "text-yellow-400"}`}>
+                            <span className={`inline-flex items-center gap-1 text-xs font-medium ${entry.progress.solved ? "text-success" : "text-warning"}`}>
                               {entry.progress.solved ? <CheckCircle2 className="size-3.5" /> : <Circle className="size-3.5" />}
                               {entry.lastAction}
                             </span>
@@ -423,51 +424,51 @@ const ProgressPage = () => {
                   </table>
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/70 px-4 py-12 text-center">
-                  <p className="text-sm text-zinc-400">
+                <div className="rounded-xl border border-dashed border-border bg-card/70 px-4 py-12 text-center">
+                  <p className="text-sm text-muted-foreground">
                     {!hasEntries ? "No practice history yet. Solve or attempt a problem to start tracking." : "No entries match the current filters."}
                   </p>
                 </div>
               )}
 
               {hasFilteredResults && (
-                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <span>Rows per page:</span>
-                    <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-zinc-300 focus:outline-none">
+                    <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className="rounded border border-border bg-secondary px-2 py-1 text-foreground focus:outline-none">
                       {PAGE_SIZES.map((s) => (<option key={s} value={s}>{s}</option>))}
                     </select>
                     <span>Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, sorted.length)} of {sorted.length}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed">Prev</button>
+                    <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="rounded border border-border bg-secondary px-2 py-1 text-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed">Prev</button>
                     {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                       let pageNum: number;
                       if (totalPages <= 5) { pageNum = i + 1; }
                       else if (currentPage <= 3) { pageNum = i + 1; }
                       else if (currentPage >= totalPages - 2) { pageNum = totalPages - 4 + i; }
                       else { pageNum = currentPage - 2 + i; }
-                      return (<button key={pageNum} type="button" onClick={() => setCurrentPage(pageNum)} className={`rounded px-2 py-1 ${currentPage === pageNum ? "bg-green-500/15 text-green-300" : "border border-zinc-700 bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}>{pageNum}</button>);
+                      return (<button key={pageNum} type="button" onClick={() => setCurrentPage(pageNum)} className={`rounded px-2 py-1 ${currentPage === pageNum ? "bg-success/15 text-success" : "border border-border bg-secondary text-muted-foreground hover:bg-accent"}`}>{pageNum}</button>);
                     })}
-                    <button type="button" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+                    <button type="button" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} className="rounded border border-border bg-secondary px-2 py-1 text-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
                   </div>
                 </div>
               )}
             </div>
 
             <aside className="w-full lg:w-80 shrink-0 space-y-4">
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Overall Progress</h3>
+              <div className="rounded-xl border border-border bg-card/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Overall Progress</h3>
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm"><span className="text-zinc-400">Solved</span><span className="text-zinc-200 font-medium">{acceptedCount}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-zinc-400">Attempted</span><span className="text-zinc-200 font-medium">{totalSubmissions - acceptedCount}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-zinc-400">Submissions</span><span className="text-zinc-200 font-medium">{totalSubmissions}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-zinc-400">Acceptance</span><span className="text-green-400 font-medium">{acceptanceRate}%</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Solved</span><span className="text-card-foreground font-medium">{acceptedCount}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Attempted</span><span className="text-card-foreground font-medium">{totalSubmissions - acceptedCount}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Submissions</span><span className="text-card-foreground font-medium">{totalSubmissions}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Acceptance</span><span className="text-success font-medium">{acceptanceRate}%</span></div>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Difficulty Breakdown</h3>
+              <div className="rounded-xl border border-border bg-card/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Difficulty Breakdown</h3>
                 {ringSegments.some((s) => s.solved > 0) ? (
                   <div className="flex flex-col items-center">
                     <ProgressRingChart segments={ringSegments} size={160} strokeWidth={22} />
@@ -475,17 +476,17 @@ const ProgressPage = () => {
                       {ringSegments.map((s) => (
                         <div key={s.name} className="flex items-center gap-1.5 text-xs">
                           <span className="size-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                          <span className="text-zinc-400">{s.name}</span>
-                          <span className="text-zinc-300 font-medium">{s.solved}/{s.total}</span>
+                          <span className="text-muted-foreground">{s.name}</span>
+                          <span className="text-foreground font-medium">{s.solved}/{s.total}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-                ) : (<p className="text-sm text-zinc-500 text-center py-4">No solved problems yet</p>)}
+                ) : (<p className="text-sm text-muted-foreground text-center py-4">No solved problems yet</p>)}
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Monthly Submissions</h3>
+              <div className="rounded-xl border border-border bg-card/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Monthly Submissions</h3>
                 {monthlyTrend.length > 0 ? (
                   <div className="flex items-end gap-1.5 h-20">
                     {monthlyTrend.map(([month, count]) => {
@@ -493,54 +494,54 @@ const ProgressPage = () => {
                       const height = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
                       return (
                         <div key={month} className="flex-1 flex flex-col items-center gap-1">
-                          <span className="text-[10px] text-zinc-500">{count}</span>
+                          <span className="text-[10px] text-muted-foreground">{count}</span>
                           <div className="w-full rounded-sm bg-green-500/60 transition-all duration-500" style={{ height: `${Math.max(height, 4)}%` }} />
-                          <span className="text-[9px] text-zinc-600 truncate w-full text-center">{month.split("-")[1]}</span>
+                          <span className="text-[9px] text-muted-foreground truncate w-full text-center">{month.split("-")[1]}</span>
                         </div>
                       );
                     })}
                   </div>
-                ) : (<p className="text-sm text-zinc-500 text-center py-4">No data yet</p>)}
+                ) : (<p className="text-sm text-muted-foreground text-center py-4">No data yet</p>)}
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Recent Statistics</h3>
+              <div className="rounded-xl border border-border bg-card/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Recent Statistics</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><div className="text-lg font-bold text-green-400">{solvedThisWeek}</div><div className="text-xs text-zinc-500">This Week</div></div>
-                  <div><div className="text-lg font-bold text-green-400">{solvedThisMonth}</div><div className="text-xs text-zinc-500">This Month</div></div>
-                  <div><div className="text-lg font-bold text-orange-400">{currentStreak}</div><div className="text-xs text-zinc-500">Current Streak</div></div>
-                  <div><div className="text-lg font-bold text-zinc-300">{maxStreak}</div><div className="text-xs text-zinc-500">Max Streak</div></div>
-                  <div><div className="text-lg font-bold text-zinc-300">{avgDaily}</div><div className="text-xs text-zinc-500">Avg Daily</div></div>
-                  <div><div className="text-lg font-bold text-zinc-300">{avgWeekly}</div><div className="text-xs text-zinc-500">Avg / Week</div></div>
+                  <div><div className="text-lg font-bold text-success">{solvedThisWeek}</div><div className="text-xs text-muted-foreground">This Week</div></div>
+                  <div><div className="text-lg font-bold text-success">{solvedThisMonth}</div><div className="text-xs text-muted-foreground">This Month</div></div>
+                  <div><div className="text-lg font-bold text-orange-400">{currentStreak}</div><div className="text-xs text-muted-foreground">Current Streak</div></div>
+                  <div><div className="text-lg font-bold text-foreground">{maxStreak}</div><div className="text-xs text-muted-foreground">Max Streak</div></div>
+                  <div><div className="text-lg font-bold text-foreground">{avgDaily}</div><div className="text-xs text-muted-foreground">Avg Daily</div></div>
+                  <div><div className="text-lg font-bold text-foreground">{avgWeekly}</div><div className="text-xs text-muted-foreground">Avg / Week</div></div>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Practice Insights</h3>
+              <div className="rounded-xl border border-border bg-card/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Practice Insights</h3>
                 {entries.length > 0 ? (
                   <div className="space-y-3 text-xs">
                     {insights.strongest.length > 0 && (
-                      <div><div className="text-zinc-500 mb-1">Strongest Topics</div>
+                      <div><div className="text-muted-foreground mb-1">Strongest Topics</div>
                         {insights.strongest.map((t) => (
-                          <div key={t.name} className="flex justify-between text-zinc-300"><span className="truncate">{t.name}</span><span className="text-green-400 shrink-0 ml-2">{Math.round(t.rate * 100)}%</span></div>
+                          <div key={t.name} className="flex justify-between text-foreground"><span className="truncate">{t.name}</span><span className="text-success shrink-0 ml-2">{Math.round(t.rate * 100)}%</span></div>
                         ))}
                       </div>
                     )}
                     {insights.weakest.length > 0 && (
-                      <div><div className="text-zinc-500 mb-1">Weakest Topics</div>
+                      <div><div className="text-muted-foreground mb-1">Weakest Topics</div>
                         {insights.weakest.map((t) => (
-                          <div key={t.name} className="flex justify-between text-zinc-300"><span className="truncate">{t.name}</span><span className="text-red-400 shrink-0 ml-2">{Math.round(t.rate * 100)}%</span></div>
+                          <div key={t.name} className="flex justify-between text-foreground"><span className="truncate">{t.name}</span><span className="text-red-400 shrink-0 ml-2">{Math.round(t.rate * 100)}%</span></div>
                         ))}
                       </div>
                     )}
                     {insights.topCompany && (
-                      <div><div className="text-zinc-500 mb-1">Most Practiced Company</div>
-                        <div className="text-zinc-300 inline-flex items-center gap-1.5"><CompanyLogo company={insights.topCompany} size="sm" /> {insights.topCompany} ({insights.topCompanyCount} problem{insights.topCompanyCount !== 1 ? "s" : ""})</div>
+                      <div><div className="text-muted-foreground mb-1">Most Practiced Company</div>
+                        <div className="text-foreground inline-flex items-center gap-1.5"><CompanyLogo company={insights.topCompany} size="sm" /> {insights.topCompany} ({insights.topCompanyCount} problem{insights.topCompanyCount !== 1 ? "s" : ""})</div>
                       </div>
                     )}
-                    <div><div className="text-zinc-500 mb-1">Avg Attempts per Problem</div><div className="text-zinc-300">{insights.avgAttempts}</div></div>
+                    <div><div className="text-muted-foreground mb-1">Avg Attempts per Problem</div><div className="text-foreground">{insights.avgAttempts}</div></div>
                   </div>
-                ) : (<p className="text-sm text-zinc-500 text-center py-2">No data to analyze</p>)}
+                ) : (<p className="text-sm text-muted-foreground text-center py-2">No data to analyze</p>)}
               </div>
             </aside>
           </div>

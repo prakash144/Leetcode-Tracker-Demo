@@ -74,24 +74,24 @@ const FilterBar = ({
         statusOptions.find((option) => option.value === selectedStatus)?.label ?? "Status";
 
     return (
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-3 sm:px-6 lg:px-8 bg-zinc-950/95 border-y border-zinc-800 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-3 sm:px-6 lg:px-8 bg-background border-y border-border lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
                 {/* List Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="outline"
-                            className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
+                            className="text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent cursor-pointer transition-colors duration-150 rounded-md"
                         >
                             Lists <ChevronDown size={16} className="ml-1" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-zinc-900 border border-zinc-700 text-white">
+                    <DropdownMenuContent className="bg-card border border-border text-foreground">
                         {listOptions.map(({ label, value }) => (
                             <DropdownMenuItem
                                 key={value}
-                                className={`hover:bg-zinc-800 cursor-pointer ${
-                                    selectedList === value ? "bg-zinc-800 font-semibold text-green-400" : ""
+                                className={`hover:bg-accent cursor-pointer ${
+                                    selectedList === value ? "bg-secondary font-semibold text-success" : ""
                                 }`}
                                 onClick={() => onListSelect(value)}
                             >
@@ -107,17 +107,17 @@ const FilterBar = ({
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="outline"
-                            className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
+                            className="text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent cursor-pointer transition-colors duration-150 rounded-md"
                         >
                             {selectedDifficulty || "Difficulty"} <ChevronDown size={16} className="ml-1" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-zinc-900 border-zinc-700 text-white">
+                    <DropdownMenuContent className="bg-card border-border text-foreground">
                         {difficulties.map((item) => (
                             <DropdownMenuItem
                                 key={item}
-                                className={`hover:bg-zinc-800 cursor-pointer ${
-                                    selectedDifficulty === item ? "bg-zinc-800 font-semibold text-green-400" : ""
+                                className={`hover:bg-accent cursor-pointer ${
+                                    selectedDifficulty === item ? "bg-secondary font-semibold text-success" : ""
                                 }`}
                                 onClick={() =>
                                     onDifficultySelect(selectedDifficulty === item ? '' : item)
@@ -140,17 +140,17 @@ const FilterBar = ({
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="outline"
-                            className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
+                            className="text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent cursor-pointer transition-colors duration-150 rounded-md"
                         >
                             {selectedStatusLabel} <ChevronDown size={16} className="ml-1" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-zinc-900 border-zinc-700 text-white">
+                    <DropdownMenuContent className="bg-card border-border text-foreground">
                         {statusOptions.map((item) => (
                             <DropdownMenuItem
                                 key={item.value}
-                                className={`hover:bg-zinc-800 cursor-pointer ${
-                                    selectedStatus === item.value ? "bg-zinc-800 font-semibold text-green-400" : ""
+                                className={`hover:bg-accent cursor-pointer ${
+                                    selectedStatus === item.value ? "bg-secondary font-semibold text-success" : ""
                                 }`}
                                 onClick={() => onStatusSelect(item.value)}
                             >
@@ -166,7 +166,7 @@ const FilterBar = ({
                     variant="outline"
                     disabled={!hasActiveFilters}
                     onClick={onResetFilters}
-                    className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
+                    className="text-sm text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent cursor-pointer transition-colors duration-150 rounded-md"
                 >
                     <RotateCcw size={16} />
                     Reset
@@ -184,7 +184,7 @@ const FilterBar = ({
             {/* Search */}
             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 {/* Last Updated Info */}
-                <div className="text-green-400 font-bold text-xs sm:mr-2">
+                <div className="text-success font-bold text-xs sm:mr-2">
                     <span aria-hidden="true">🧠</span> Problem Set – Updated on {lastUpdated ?? "Loading..."}
                 </div>
 
@@ -194,7 +194,7 @@ const FilterBar = ({
                     aria-label="Search questions"
                     value={searchTerm}
                     onChange={handleSearchChange}
-                    className="w-full text-sm bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400 sm:w-[240px]"
+                    className="w-full text-sm bg-secondary border-border text-foreground placeholder:text-muted-foreground sm:w-[240px]"
                 />
             </div>
         </div>

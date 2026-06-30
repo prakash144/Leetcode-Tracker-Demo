@@ -1,3 +1,4 @@
+"use client";
 import { useState, useEffect } from "react";
 import type { Problem } from "@/lib/progressTypes";
 import { getProblemId } from "@/lib/problemId";

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useHeatmapData, type HeatmapDay } from "@/hooks/useHeatmapData";
 import ErrorState from "@/components/states/ErrorState";
 import EmptyState from "@/components/states/EmptyState";
@@ -203,40 +204,40 @@ const Heatmap = memo(function Heatmap({ uid }: HeatmapProps) {
     const currentLabel = TIME_RANGES.find((t) => t.value === timeRange)?.label || "Current";
 
     return (
-        <section className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-5">
+        <section className="bg-card/80 border border-border rounded-xl p-5">
             {/* Header: submissions count + stats + dropdown */}
             {uid && !loading && (
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-4">
                     <div className="flex items-center gap-1.5">
-                        <span className="text-lg font-semibold text-white">{stats.totalSubmissions}</span>
-                        <span className="text-sm text-zinc-400">submissions in the past one year</span>
+                        <span className="text-lg font-semibold text-foreground">{stats.totalSubmissions}</span>
+                        <span className="text-sm text-muted-foreground">submissions in the past one year</span>
                     </div>
                     <div className="flex items-center gap-3 text-xs">
                         <div className="flex items-center gap-1">
-                            <span className="text-zinc-500">Total active days:</span>
-                            <span className="font-medium text-zinc-200">{stats.activeDays}</span>
+                            <span className="text-muted-foreground">Total active days:</span>
+                            <span className="font-medium text-card-foreground">{stats.activeDays}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <span className="text-zinc-500">Max streak:</span>
-                            <span className="font-medium text-zinc-200">{stats.maxStreak}</span>
+                            <span className="text-muted-foreground">Max streak:</span>
+                            <span className="font-medium text-card-foreground">{stats.maxStreak}</span>
                         </div>
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 type="button"
                                 onClick={handleDropdownToggle}
-                                className="flex cursor-pointer items-center rounded-md px-2.5 py-1 text-xs text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition-colors"
+                                className="flex cursor-pointer items-center rounded-md px-2.5 py-1 text-xs text-foreground bg-secondary hover:bg-accent border border-border transition-colors"
                             >
                                 {currentLabel}
-                                <svg className="ml-2 size-3" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M4.929 7.913l7.078 7.057 7.064-7.057a1 1 0 111.414 1.414l-7.77 7.764a1 1 0 01-1.415 0L3.515 9.328a1 1 0 011.414-1.414z" clipRule="evenodd" /></svg>
+                                <ChevronDown className="ml-2 size-3" />
                             </button>
                             {dropdownOpen && (
-                                <div className="absolute right-0 top-full mt-1 z-50 w-32 rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl">
+                                <div className="absolute right-0 top-full mt-1 z-50 w-32 rounded-lg border border-border bg-card py-1 shadow-xl">
                                     {TIME_RANGES.map((t) => (
                                         <button
                                             key={t.value}
                                             type="button"
                                             onClick={() => handleDropdownSelect(t.value)}
-                                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${timeRange === t.value ? "text-green-400 bg-green-500/10" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"}`}
+                                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${timeRange === t.value ? "text-success bg-success/10" : "text-muted-foreground hover:text-card-foreground hover:bg-accent"}`}
                                         >
                                             {t.label}
                                         </button>
@@ -268,7 +269,7 @@ const Heatmap = memo(function Heatmap({ uid }: HeatmapProps) {
                             {DAY_LABELS.map((label, i) => (
                                 label ? (
                                     <text
-                                        key={label}
+                                        key={i}
                                         x={DAY_LABEL_W - 4}
                                         y={i * (CELL + GAP) + CELL - 1}
                                         textAnchor="end"
@@ -325,7 +326,7 @@ const Heatmap = memo(function Heatmap({ uid }: HeatmapProps) {
                     </div>
 
                     {/* Legend: Less █ █ █ █ █ More */}
-                    <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
+                    <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                         <span>Less</span>
                         <div className="flex gap-0.5">
                             {LEVELS.map((count, i) => (
@@ -347,7 +348,7 @@ const Heatmap = memo(function Heatmap({ uid }: HeatmapProps) {
                     {/* Tooltip */}
                     {tooltip && (
                         <div
-                            className="fixed z-50 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-white shadow-lg pointer-events-none"
+                            className="fixed z-50 rounded-md border border-border bg-card px-3 py-1.5 text-xs text-foreground shadow-lg pointer-events-none"
                             style={{
                                 left: tooltip.x,
                                 top: tooltip.y,
@@ -355,7 +356,7 @@ const Heatmap = memo(function Heatmap({ uid }: HeatmapProps) {
                             }}
                         >
                             <div className="font-medium">{tooltip.date}</div>
-                            <div className="text-zinc-400">{getCellLabel(tooltip.count)}</div>
+                            <div className="text-muted-foreground">{getCellLabel(tooltip.count)}</div>
                         </div>
                     )}
                 </>

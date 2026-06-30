@@ -51,7 +51,7 @@ const ProblemCardList = ({
         return (
           <div
             key={`${q.company}-${q.list}-${q.problemId}`}
-            className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-colors hover:border-zinc-700"
+            className="rounded-lg border border-border bg-card p-3 transition-colors hover:border-border"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -59,9 +59,9 @@ const ProblemCardList = ({
                   href={q.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-medium text-white hover:text-blue-400 transition-colors"
+                  className="text-sm font-medium text-foreground hover:text-info transition-colors"
                 >
-                  <span className="text-zinc-500">{startIndex + idx}.</span>{" "}
+                  <span className="text-muted-foreground">{startIndex + idx}.</span>{" "}
                   {q.title}
                 </a>
               </div>
@@ -75,7 +75,7 @@ const ProblemCardList = ({
                   aria-pressed={isBookmarked}
                 >
                   <Star
-                    className={`size-4 ${isBookmarked ? "fill-yellow-400 text-yellow-400" : "text-zinc-500 hover:text-yellow-300"}`}
+                    className={`size-4 ${isBookmarked ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground hover:text-warning"}`}
                   />
                 </button>
               </div>
@@ -88,7 +88,7 @@ const ProblemCardList = ({
               })}
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-zinc-800 pt-2">
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-2">
               <button
                 type="button"
                 onClick={() => requireProgressOrRun(() => onToggleSolved(q))}
@@ -96,8 +96,8 @@ const ProblemCardList = ({
                 aria-pressed={isSolved}
                 className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                   isSolved
-                    ? "bg-green-500/20 text-green-300"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                    ? "bg-success/20 text-success"
+                    : "bg-secondary text-muted-foreground hover:bg-accent"
                 }`}
               >
                 {isSolved ? "Solved" : "Solve"}
@@ -110,7 +110,7 @@ const ProblemCardList = ({
                 className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                   isAttempted
                     ? "bg-blue-500/20 text-blue-300"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                    : "bg-secondary text-muted-foreground hover:bg-accent"
                 }`}
               >
                 {isAttempted ? "Attempted" : "Attempt"}
@@ -123,7 +123,7 @@ const ProblemCardList = ({
                 className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                   isRevision
                     ? "bg-cyan-500/20 text-cyan-300"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                    : "bg-secondary text-muted-foreground hover:bg-accent"
                 }`}
               >
                 <RotateCcw className="size-3" />

@@ -23,7 +23,7 @@ const AppShell = ({
   onLogin,
   onLogout,
 }: AppShellProps) => (
-  <div className="min-h-screen bg-black text-white">
+  <div className="min-h-screen bg-background text-foreground">
     <TopNav
       user={user}
       authLoading={authLoading}

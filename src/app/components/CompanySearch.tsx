@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import CompanyLogo from "@/components/data-display/CompanyLogo";
 
@@ -81,7 +81,7 @@ const CompanySearch = ({
             <Input
                 placeholder="Search company"
                 aria-label="Search companies"
-                className="text-sm bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+                className="text-sm bg-secondary border-border text-foreground placeholder:text-muted-foreground"
                 value={query}
                 onChange={(e) => {
                     setQuery(e.target.value);
@@ -99,7 +99,7 @@ const CompanySearch = ({
                 <ul
                     id="company-listbox"
                     role="listbox"
-                    className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm shadow-lg"
+                    className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto rounded-md bg-secondary border border-border text-foreground text-sm shadow-lg"
                 >
                     {filtered.map((company, idx) => (
                         <li
@@ -108,8 +108,8 @@ const CompanySearch = ({
                             role="option"
                             aria-selected={highlightIndex === idx}
                             onClick={() => handleSelect(company)}
-                         className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-zinc-700 ${
-                                 idx === highlightIndex ? "bg-zinc-700" : ""
+                         className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent ${
+                                 idx === highlightIndex ? "bg-accent" : ""
                              }`}
                          >
                              <CompanyLogo company={company} size="sm" />

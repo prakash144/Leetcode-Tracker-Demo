@@ -11,15 +11,15 @@ import {
 
 const Footer = () => {
     return (
-        <footer className="w-full bg-zinc-900 text-white border-t border-zinc-700 mt-auto">
+        <footer className="w-full bg-card text-foreground border-t border-border mt-auto">
             <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Brand + Social Links */}
                 <div className="flex flex-col items-center md:items-start gap-3">
-                    <div className="flex items-center gap-2 text-sm text-zinc-400">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span role="img" aria-label="Interview Tracly">🎯</span>
-                        <span className="font-semibold text-zinc-300">Interview Tracly</span>
-                        <span className="text-zinc-600">·</span>
-                        <span className="text-zinc-500">Master Coding Interviews</span>
+                        <span className="font-semibold text-foreground">Interview Tracly</span>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-muted-foreground">Master Coding Interviews</span>
                     </div>
                     <div className="flex gap-4">
                         <a

@@ -2,15 +2,29 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -24,31 +38,23 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  --color-easy: #22c55e;
+  --color-medium: #eab308;
+  --color-hard: #ef4444;
+  --color-accent-color: var(--accent-color, #22c55e);
 }
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --background: oklch(0.98 0.005 200);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -60,11 +66,12 @@
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --accent: oklch(0.95 0.01 200);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.87 0 0);
+  --input: oklch(0.87 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -97,6 +104,7 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
@@ -117,13 +125,10 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
-    @apply bg-black text-zinc-100 antialiased;
-    background:
-      radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 34rem),
-      linear-gradient(180deg, #030712 0%, #050505 42%, #000 100%);
+    @apply bg-background text-foreground antialiased;
     min-height: 100vh;
   }
 
@@ -132,21 +137,25 @@
   input,
   textarea,
   [role="button"] {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color,#22c55e)] focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 }
 
 @layer utilities {
   .app-surface {
-    @apply rounded-xl border border-zinc-800 bg-zinc-900/90 shadow-lg shadow-black/20;
+    @apply rounded-xl border border-border bg-card/80 shadow-lg;
   }
 
   .app-chip {
-    @apply rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-200 transition-colors;
+    @apply rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground transition-colors;
   }
 
   .app-chip-active {
-    @apply border-green-500/50 bg-green-500/15 text-green-200;
+    @apply border-success/50 bg-success/15 text-success;
+  }
+
+  .app-chip-selected {
+    @apply border-success/50 bg-success/15 text-success;
   }
 
   .app-transition {
@@ -154,24 +163,24 @@
   }
 
   .scrollbar-thin-dark {
-    scrollbar-color: rgb(63 63 70) transparent;
+    scrollbar-color: oklch(0.4 0 0) transparent;
     scrollbar-width: thin;
   }
 
   .status-solved {
-    @apply text-green-400;
+    @apply text-success;
   }
 
   .status-attempted {
-    @apply text-blue-400;
+    @apply text-info;
   }
 
   .status-bookmarked {
-    @apply text-yellow-300;
+    @apply text-warning;
   }
 
   .status-revision {
-    @apply text-cyan-300;
+    @apply text-cyan-400;
   }
 }
 

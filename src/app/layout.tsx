@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css"; // Global CSS import
+import "./globals.css";
 
 const geistSans = Geist({
-    variable: "--font-geist-sans", // Define font as CSS variable
-    subsets: ["latin"], // Define font subset (Latin characters)
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-    variable: "--font-geist-mono", // Define font as CSS variable
-    subsets: ["latin"], // Define font subset (Latin characters)
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
 });
 
-// Metadata with updated app name
 export const metadata: Metadata = {
     metadataBase: new URL("https://prakash144.github.io/Interview-Tracly"),
     title: "Interview Tracly",
@@ -43,20 +42,21 @@ export const metadata: Metadata = {
     },
 };
 
+const FLASH_SCRIPT = `(function(){try{var m=localStorage.getItem("interview-tracly-theme");if(!m||(m!=="dark"&&m!=="light"&&m!=="system"))m="system";var d=m==="dark"||(m==="system"&&window.matchMedia("(prefers-color-scheme:dark)").matches);document.documentElement.classList.toggle("dark",d)}catch(e){document.documentElement.classList.add("dark")}})()`;
+
 export default function RootLayout({
                                        children,
                                    }: Readonly<{
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
         <head>
             <link rel="manifest" href="/manifest.json" />
             <meta name="theme-color" content="#22c55e" />
+            <script dangerouslySetInnerHTML={{ __html: FLASH_SCRIPT }} />
         </head>
-        <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`} // Apply custom fonts globally
-        >
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         </body>
         </html>

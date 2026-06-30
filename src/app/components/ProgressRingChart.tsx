@@ -44,7 +44,7 @@ const ProgressRingChart = memo(function ProgressRingChart({
         className="inline-flex items-center justify-center shrink-0"
         style={{ width: size, height: size }}
       >
-        <span className="text-xs text-zinc-500">No data</span>
+        <span className="text-xs text-muted-foreground">No data</span>
       </div>
     );
   }
@@ -72,7 +72,14 @@ const ProgressRingChart = memo(function ProgressRingChart({
         cumulativeAngle += segmentAngle + RING_GAP_DEG;
 
         return (
-          <g key={seg.name} onClick={() => onSegmentClick?.(seg.name)}>
+          <g
+            key={seg.name}
+            onClick={() => onSegmentClick?.(seg.name)}
+            onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && onSegmentClick) { e.preventDefault(); onSegmentClick(seg.name); } }}
+            role={onSegmentClick ? "button" : undefined}
+            tabIndex={onSegmentClick ? 0 : undefined}
+            aria-label={onSegmentClick ? `${seg.name}: ${seg.solved} of ${seg.total} solved` : undefined}
+          >
             <circle
               cx={center}
               cy={center}

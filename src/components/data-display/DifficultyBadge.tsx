@@ -7,9 +7,9 @@ interface DifficultyBadgeProps {
 }
 
 const colorMap: Record<string, string> = {
-  easy: "text-green-400 bg-green-400/10 border-green-400/20",
-  medium: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
-  hard: "text-red-400 bg-red-400/10 border-red-400/20",
+  easy: "text-easy bg-easy/10 border-easy/20",
+  medium: "text-medium bg-medium/10 border-medium/20",
+  hard: "text-hard bg-hard/10 border-hard/20",
 };
 
 const sizeMap: Record<string, string> = {
@@ -22,7 +22,7 @@ const DifficultyBadge = memo(function DifficultyBadge({
   size = "sm",
   className = "",
 }: DifficultyBadgeProps) {
-  const color = colorMap[difficulty.toLowerCase()] ?? "text-zinc-400 bg-zinc-800 border-zinc-700";
+  const color = colorMap[difficulty.toLowerCase()] ?? "text-muted-foreground bg-secondary border-border";
 
   return (
     <span
