@@ -3,6 +3,7 @@
 import { useHeatmapData } from "@/hooks/useHeatmapData";
 import ErrorState from "@/components/states/ErrorState";
 import EmptyState from "@/components/states/EmptyState";
+import LoadingState from "@/components/states/LoadingState";
 
 interface HeatmapProps {
     uid?: string | null;
@@ -24,15 +25,17 @@ const Heatmap = ({ uid }: HeatmapProps) => {
         <section className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-zinc-200">Activity</h2>
-                {loading && <span className="text-xs text-zinc-500">Loading...</span>}
             </div>
             {error && <ErrorState message={error} />}
             {!uid && (
                 <EmptyState message="Sign in to see your activity heatmap." />
             )}
+            {uid && loading && <LoadingState message="Loading activity data..." />}
             {uid && !loading && !error && !hasActivity && (
                 <EmptyState message="No activity yet. Solve or attempt a problem to start filling the heatmap." />
             )}
+            {uid && !loading && (
+            <>
             <div className="overflow-x-auto">
                 <div className="grid grid-flow-col grid-rows-7 gap-1 w-max">
                     {days.map((day) => (
@@ -55,6 +58,8 @@ const Heatmap = ({ uid }: HeatmapProps) => {
                 ))}
                 <span>More</span>
             </div>
+            </>
+            )}
         </section>
     );
 };
