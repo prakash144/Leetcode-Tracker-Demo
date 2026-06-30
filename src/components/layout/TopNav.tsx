@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { User } from "firebase/auth";
-import { BarChart3, Bookmark, LayoutDashboard, ListChecks, Settings } from "lucide-react";
+import { BarChart3, Bookmark, FolderKanban, LayoutDashboard, ListChecks, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import UserMenu from "./UserMenu";
 
@@ -38,6 +38,12 @@ const navigationItems = [
     label: "Favorites",
     href: "/favorites",
     icon: Bookmark,
+    enabled: true,
+  },
+  {
+    label: "My Lists",
+    href: "/my-lists",
+    icon: FolderKanban,
     enabled: true,
   },
   {

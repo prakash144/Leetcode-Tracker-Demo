@@ -4,6 +4,7 @@ import FilterBar from "@/app/components/FilterBar";
 import QuestionTable from "@/app/components/QuestionTable";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingState from "@/components/states/LoadingState";
+import { useCustomLists } from "@/hooks/useCustomLists";
 import type { ProblemWorkspaceData } from "../hooks/useProblemWorkspaceData";
 
 interface ProblemWorkspaceProps {
@@ -23,6 +24,8 @@ const ProblemWorkspace = ({ workspace }: ProblemWorkspaceProps) => {
     setSelectedCompany,
     setSelectedList,
   } = workspace;
+
+  const customLists = useCustomLists(auth.user?.uid);
 
   return (
     <>
@@ -66,6 +69,7 @@ const ProblemWorkspace = ({ workspace }: ProblemWorkspaceProps) => {
           onToggleBookmarked={progress.toggleBookmarked}
           onToggleRevision={progress.toggleRevision}
           onSaveNotes={progress.saveNotes}
+          customLists={customLists}
         />
       </div>
     </>

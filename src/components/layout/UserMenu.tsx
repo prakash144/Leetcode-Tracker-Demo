@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { User } from "firebase/auth";
-import { LogIn, LogOut, Moon, Settings, Sun, User as UserIcon } from "lucide-react";
+import { FolderKanban, LogIn, LogOut, Moon, Settings, Sun, User as UserIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,6 +95,12 @@ const UserMenu = ({
           <Link href="/settings" className="flex items-center gap-3">
             <UserIcon className="size-4" />
             My Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="cursor-pointer hover:bg-zinc-800">
+          <Link href="/my-lists" className="flex items-center gap-3">
+            <FolderKanban className="size-4" />
+            My Lists
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer hover:bg-zinc-800">

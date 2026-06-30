@@ -38,6 +38,17 @@ export interface SerializableUserProblemProgress {
 
 export type ProgressMap = Record<string, UserProblemProgress>;
 
+export interface CustomList {
+  id: string;
+  name: string;
+  description: string;
+  problemIds: string[];
+  createdAt: Timestamp | null;
+  updatedAt: Timestamp;
+}
+
+export type CustomListsMap = Record<string, CustomList>;
+
 export interface AppUserProfile {
   uid: string;
   displayName: string | null;

@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import { RotateCcw, Star } from "lucide-react";
-import type { Problem, ProgressMap } from "@/lib/progressTypes";
+import type { CustomList, Problem, ProgressMap } from "@/lib/progressTypes";
 import EmptyState from "@/components/states/EmptyState";
 import DifficultyBadge from "@/components/data-display/DifficultyBadge";
 import TopicBadge from "@/components/data-display/TopicBadge";
@@ -12,6 +12,7 @@ import { useProblemSorting } from "@/features/problems/hooks/useProblemSorting";
 import { usePagination } from "@/features/problems/hooks/usePagination";
 import ProblemPagination from "@/features/problems/components/ProblemPagination";
 import ProblemCardList from "@/features/problems/components/ProblemCardList";
+import AddToListDialog from "@/features/problems/components/AddToListDialog";
 
 const NotesDialog = dynamic(() => import("./NotesDialog"), { ssr: false });
 
@@ -30,24 +31,32 @@ interface QuestionTableProps {
     onToggleBookmarked: (problem: Problem) => void;
     onToggleRevision: (problem: Problem) => void;
     onSaveNotes: (problem: Problem, notes: string) => void;
+    customLists?: {
+        lists: CustomList[];
+        isProblemInAnyList: (problemId: string) => string[];
+        addProblem: (listId: string, problemId: string) => Promise<void>;
+        removeProblem: (listId: string, problemId: string) => Promise<void>;
+        create: (name: string, description?: string) => Promise<void>;
+    };
 }
 
 const QuestionTable = ({
-                           questions,
-                           difficultyFilter,
-                           selectedTopics,
-                           searchTerm,
-                           statusFilter,
-                           progressMap,
-                           progressLoading,
-                           progressEnabled,
-                           onRequireAuth,
-                           onToggleSolved,
-                           onToggleAttempted,
-                           onToggleBookmarked,
-                           onToggleRevision,
-                           onSaveNotes,
-                       }: QuestionTableProps) => {
+                            questions,
+                            difficultyFilter,
+                            selectedTopics,
+                            searchTerm,
+                            statusFilter,
+                            progressMap,
+                            progressLoading,
+                            progressEnabled,
+                            onRequireAuth,
+                            onToggleSolved,
+                            onToggleAttempted,
+                            onToggleBookmarked,
+                            onToggleRevision,
+                            onSaveNotes,
+                            customLists,
+                        }: QuestionTableProps) => {
     const filteredQuestions = useFilteredProblems(questions, {
         difficulty: difficultyFilter,
         selectedTopics,
@@ -179,6 +188,7 @@ const QuestionTable = ({
                     <th className="px-4 py-3 text-center"><Star className="size-4 inline-block text-yellow-400" /></th>
                     <th className="px-4 py-3 text-center">Revision</th>
                     <th className="px-4 py-3 text-center">Notes</th>
+                    {customLists && <th className="px-4 py-3 text-center">List</th>}
                 </tr>
                 </thead>
                 <tbody>
@@ -267,6 +277,19 @@ const QuestionTable = ({
                                 onSave={onSaveNotes}
                             />
                         </td>
+                        {customLists && (
+                            <td className="px-4 py-3 text-center">
+                                <AddToListDialog
+                                    problemId={q.problemId}
+                                    problemTitle={q.title}
+                                    lists={customLists.lists}
+                                    isProblemInList={customLists.isProblemInAnyList}
+                                    onAddProblem={customLists.addProblem}
+                                    onRemoveProblem={customLists.removeProblem}
+                                    onCreateList={customLists.create}
+                                />
+                            </td>
+                        )}
                     </tr>
                 )})}
                 </tbody>
