@@ -2,7 +2,6 @@
 
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import type { Problem, ProgressMap } from "@/lib/progressTypes";
-import MetricCard from "@/components/data-display/MetricCard";
 
 interface DashboardStatsProps {
     questions: Problem[];
@@ -50,21 +49,10 @@ const DashboardStats = ({ questions, progressMap }: DashboardStatsProps) => {
     const stats = useDashboardStats(questions, progressMap);
 
     return (
-        <section className="space-y-4 mb-4">
-            <div className="flex flex-wrap gap-4">
-                <MetricCard label="Progress" value={`${stats.solvedPercent}%`} />
-                <MetricCard label="Solved" value={`${stats.solved}/${stats.total}`} />
-                <MetricCard label="Attempted" value={`${stats.attempted}/${stats.total}`} />
-                <MetricCard label="Unsolved" value={stats.unsolved} />
-                <MetricCard label="Bookmarked" value={stats.bookmarked} />
-                <MetricCard label="Revision" value={stats.revision} />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <ProgressList title="Difficulty" items={stats.difficultyStats} />
-                <ProgressList title="Company" items={stats.companyStats} />
-                <ProgressList title="Topics" items={stats.topicStats} />
-            </div>
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <ProgressList title="Difficulty" items={stats.difficultyStats} />
+            <ProgressList title="Company" items={stats.companyStats} />
+            <ProgressList title="Topics" items={stats.topicStats} />
         </section>
     );
 };

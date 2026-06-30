@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowRight, BarChart3, Bookmark, ListChecks, RotateCcw } from "lucide-react";
+import { ArrowRight, BarChart3, Bookmark, Flame, ListChecks, Play, RotateCcw } from "lucide-react";
 import Footer from "@/app/components/Footer";
 import DashboardStats from "@/app/components/DashboardStats";
 import Heatmap from "@/app/components/Heatmap";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProblemWorkspaceData } from "@/features/problems/hooks/useProblemWorkspaceData";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import type { Problem, UserProblemProgress } from "@/lib/progressTypes";
 
 const quickActions = [
   {
@@ -40,6 +41,50 @@ const quickActions = [
   },
 ];
 
+const computeStreak = (progressMap: Record<string, UserProblemProgress>): number => {
+  const solvedDates = new Set<string>();
+  for (const p of Object.values(progressMap)) {
+    if (p.solved && p.solvedAt) {
+      const d = new Date(p.solvedAt.seconds * 1000).toISOString().slice(0, 10);
+      solvedDates.add(d);
+    }
+  }
+  if (solvedDates.size === 0) return 0;
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    if (solvedDates.has(key)) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+};
+
+const findLastAttempted = (
+  questions: Problem[],
+  progressMap: Record<string, UserProblemProgress>
+): { problem: Problem; progress: UserProblemProgress } | null => {
+  const entries: { problem: Problem; progress: UserProblemProgress }[] = [];
+  for (const p of Object.values(progressMap)) {
+    if (p.attempted && !p.solved && p.attemptedAt) {
+      const q = questions.find((q) => q.problemId === p.problemId);
+      if (q) entries.push({ problem: q, progress: p });
+    }
+  }
+  if (entries.length === 0) return null;
+  entries.sort((a, b) => {
+    const ta = a.progress.attemptedAt!.seconds * 1000;
+    const tb = b.progress.attemptedAt!.seconds * 1000;
+    return tb - ta;
+  });
+  return entries[0];
+};
+
 const DashboardPage = () => {
   const { auth, progress, questionsState } = useProblemWorkspaceData();
   const stats = useDashboardStats(questionsState.questions, progress.progressMap);
@@ -48,6 +93,16 @@ const DashboardPage = () => {
     if (!stats || stats.total === 0) return 0;
     return Math.round((stats.solved / stats.total) * 100);
   }, [stats]);
+
+  const streak = useMemo(
+    () => (auth.user ? computeStreak(progress.progressMap) : 0),
+    [auth.user, progress.progressMap]
+  );
+
+  const continueProblem = useMemo(
+    () => findLastAttempted(questionsState.questions, progress.progressMap),
+    [questionsState.questions, progress.progressMap]
+  );
 
   return (
     <AppShell
@@ -104,6 +159,15 @@ const DashboardPage = () => {
                         {stats.total} problems in current dataset
                       </p>
                     </div>
+                    {streak > 0 && (
+                      <div className="flex items-center gap-2 rounded-lg border border-orange-500/20 bg-orange-500/10 px-4 py-2">
+                        <Flame className="size-5 text-orange-400" />
+                        <div className="text-sm">
+                          <span className="font-bold text-orange-300">{streak}</span>
+                          <span className="text-zinc-400 ml-1">day streak</span>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-6 text-center">
                       <div>
                         <div className="text-2xl font-bold text-green-400">{stats.solved}</div>
@@ -159,6 +223,31 @@ const DashboardPage = () => {
               <MetricCard label="Bookmarked" value={stats.bookmarked} />
               <MetricCard label="Revision" value={stats.revision} />
             </div>
+
+            {/* Continue Solving */}
+            {continueProblem && (
+              <Link href="/problems" className="group block">
+                <section className="rounded-xl border border-green-500/20 bg-green-500/5 p-5 transition-colors hover:border-green-500/40 hover:bg-green-500/10">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-500/15 text-green-400 group-hover:bg-green-500/20">
+                      <Play className="size-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-medium text-green-400 uppercase tracking-wider">Continue Solving</div>
+                      <div className="mt-0.5 truncate text-sm font-semibold text-white">
+                        {continueProblem.problem.title}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3 text-xs text-zinc-400">
+                      <span className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-0.5 font-medium capitalize">
+                        {continueProblem.problem.difficulty}
+                      </span>
+                      <ArrowRight className="size-4 text-green-400 transition-transform group-hover:translate-x-0.5" />
+                    </div>
+                  </div>
+                </section>
+              </Link>
+            )}
 
             {/* Dashboard Stats (Difficulty, Company, Topics) */}
             <DashboardStats
