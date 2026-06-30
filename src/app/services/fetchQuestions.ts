@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Papa, { ParseResult } from "papaparse";
 import type { Problem } from "@/lib/progressTypes";
 import { getProblemId } from "@/lib/problemId";
 
@@ -7,9 +6,9 @@ interface CsvItem {
     Title: string;
     Link: string;
     Difficulty: string;
-    Topics: string; // Topic tag from CSV
+    Topics: string;
     Frequency: string;
-    "Acceptance Rate": string; // Acceptance Rate as a string
+    "Acceptance Rate": string;
 }
 
 interface FetchQuestionsContext {
@@ -17,7 +16,6 @@ interface FetchQuestionsContext {
     list: string;
 }
 
-// Utility to fetch and parse the CSV file
 const fetchCSV = async (url: string): Promise<CsvItem[]> => {
     const cacheKey = `interviewtracly:csv:${url}`;
     const cachedText =
@@ -38,10 +36,11 @@ const fetchCSV = async (url: string): Promise<CsvItem[]> => {
         }
     }
 
+    const Papa = await import("papaparse");
     const result = Papa.parse<CsvItem>(text, {
         header: true,
         skipEmptyLines: true,
-    }) as unknown as ParseResult<CsvItem>;
+    });
 
     return result.data;
 };

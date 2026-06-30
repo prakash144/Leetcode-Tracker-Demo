@@ -3,10 +3,30 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, BarChart3, Bookmark, Flame, ListChecks, Play, RotateCcw } from "lucide-react";
+import dynamic from "next/dynamic";
 import Footer from "@/app/components/Footer";
 import DashboardStats from "@/app/components/DashboardStats";
-import Heatmap from "@/app/components/Heatmap";
 import AppShell from "@/components/layout/AppShell";
+
+const Heatmap = dynamic(() => import("@/app/components/Heatmap"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-4 py-6">
+      <div className="mx-auto mb-4 h-3 max-w-xs overflow-hidden rounded-full bg-zinc-800">
+        <div className="h-full w-1/3 animate-pulse rounded-full bg-green-500" />
+      </div>
+      <div className="flex gap-1">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div key={i} className="flex flex-col gap-1">
+            {Array.from({ length: 7 }).map((_, j) => (
+              <div key={j} className="size-3 rounded-sm bg-zinc-800 animate-pulse" />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  ),
+});
 import PageHeader from "@/components/layout/PageHeader";
 import MetricCard from "@/components/data-display/MetricCard";
 import ErrorState from "@/components/states/ErrorState";

@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import { RotateCcw, Star } from "lucide-react";
 import type { Problem, ProgressMap } from "@/lib/progressTypes";
 import EmptyState from "@/components/states/EmptyState";
@@ -11,7 +12,8 @@ import { useProblemSorting } from "@/features/problems/hooks/useProblemSorting";
 import { usePagination } from "@/features/problems/hooks/usePagination";
 import ProblemPagination from "@/features/problems/components/ProblemPagination";
 import ProblemCardList from "@/features/problems/components/ProblemCardList";
-import NotesDialog from "./NotesDialog";
+
+const NotesDialog = dynamic(() => import("./NotesDialog"), { ssr: false });
 
 interface QuestionTableProps {
     questions: Problem[];
