@@ -6,11 +6,17 @@ import ErrorState from "@/components/states/ErrorState";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingState from "@/components/states/LoadingState";
 
-interface HeatmapProps {
-    uid?: string | null;
-}
+type TimeRange = "current" | "90d" | "30d";
+
+const TIME_RANGES: { label: string; value: TimeRange }[] = [
+    { label: "Current", value: "current" },
+    { label: "90 Days", value: "90d" },
+    { label: "30 Days", value: "30d" },
+];
 
 const DAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""];
+
+const LEVELS = [0, 1, 2, 4, 6, 10];
 
 const getCellColor = (count: number) => {
     if (count >= 10) return "bg-green-400";
@@ -25,6 +31,9 @@ const getCellLabel = (count: number) => {
     if (count === 0) return "No activity";
     return `${count} ${count === 1 ? "submission" : "submissions"}`;
 };
+
+const CELL = 12;
+const GAP = 2;
 
 interface CalendarData {
     weeks: HeatmapDay[][];
@@ -103,13 +112,39 @@ const computeHeatmapStats = (days: HeatmapDay[]) => {
     return { totalSubmissions, activeDays, currentStreak, maxStreak };
 };
 
+interface HeatmapProps {
+    uid?: string | null;
+}
+
 const Heatmap = ({ uid }: HeatmapProps) => {
-    const { days, loading, error } = useHeatmapData(uid);
+    const { days: rawDays, loading, error } = useHeatmapData(uid);
+    const [timeRange, setTimeRange] = useState<TimeRange>("current");
     const [tooltip, setTooltip] = useState<{ date: string; count: number; x: number; y: number } | null>(null);
 
-    const { weeks, monthLabels } = useMemo(() => buildCalendarData(days), [days]);
-    const stats = useMemo(() => computeHeatmapStats(days), [days]);
-    const hasActivity = days.some((day) => day.count > 0);
+    const filteredDays = useMemo(() => {
+        if (rawDays.length === 0) return [];
+        const now = new Date();
+        let cutoff: Date;
+        switch (timeRange) {
+            case "30d":
+                cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+            case "90d":
+                cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                break;
+            default:
+                cutoff = new Date(now.getTime() - 364 * 24 * 60 * 60 * 1000);
+                break;
+        }
+        const cutoffStr = cutoff.toISOString().slice(0, 10);
+        return rawDays.filter((d) => d.date >= cutoffStr);
+    }, [rawDays, timeRange]);
+
+    const { weeks, monthLabels } = useMemo(() => buildCalendarData(filteredDays), [filteredDays]);
+    const stats = useMemo(() => computeHeatmapStats(filteredDays), [filteredDays]);
+    const hasActivity = filteredDays.some((day) => day.count > 0);
+
+    const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
     const handleMouseEnter = useCallback(
         (day: HeatmapDay, e: React.MouseEvent) => {
@@ -134,28 +169,58 @@ const Heatmap = ({ uid }: HeatmapProps) => {
         setTooltip(null);
     }, []);
 
-    const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
-
     return (
         <section className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between mb-4">
+            {/* Header */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <h2 className="text-sm font-semibold text-zinc-200">Activity</h2>
-                {uid && !loading && stats.activeDays > 0 && (
-                    <div className="flex items-center gap-4 text-xs text-zinc-400">
-                        <span>{stats.totalSubmissions} submissions</span>
-                        <span>{stats.activeDays} active days</span>
-                        {stats.currentStreak > 0 && (
-                            <span className="text-green-400">
-                                🔥 {stats.currentStreak}-day streak
-                            </span>
-                        )}
-                        {stats.maxStreak > 1 && (
-                            <span>Best: {stats.maxStreak} days</span>
-                        )}
+                {uid && !loading && (
+                    <div className="flex rounded-md border border-zinc-700 overflow-hidden">
+                        {TIME_RANGES.map((tr) => (
+                            <button
+                                key={tr.value}
+                                type="button"
+                                onClick={() => setTimeRange(tr.value)}
+                                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                                    timeRange === tr.value
+                                        ? "bg-green-500/15 text-green-300 border-r border-zinc-700 last:border-r-0"
+                                        : "bg-zinc-800 text-zinc-400 hover:text-zinc-200 border-r border-zinc-700 last:border-r-0"
+                                }`}
+                            >
+                                {tr.label}
+                            </button>
+                        ))}
                     </div>
                 )}
             </div>
 
+            {/* Summary stats */}
+            {uid && !loading && hasActivity && (
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mb-4 text-xs">
+                    <div>
+                        <span className="text-zinc-500">Submissions </span>
+                        <span className="text-zinc-200 font-medium">{stats.totalSubmissions}</span>
+                    </div>
+                    <div>
+                        <span className="text-zinc-500">Active days </span>
+                        <span className="text-zinc-200 font-medium">{stats.activeDays}</span>
+                    </div>
+                    {stats.currentStreak > 0 && (
+                        <div>
+                            <span className="text-zinc-500">Streak </span>
+                            <span className="text-green-400 font-medium">🔥 {stats.currentStreak} day{stats.currentStreak !== 1 ? "s" : ""}</span>
+                        </div>
+                    )}
+                    {stats.maxStreak > 1 && (
+                        <div>
+                            <span className="text-zinc-500">Best </span>
+                            <span className="text-zinc-200 font-medium">{stats.maxStreak} days</span>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* States */}
             {error && <ErrorState message={error} />}
             {!uid && (
                 <EmptyState message="Sign in to see your activity heatmap." />
@@ -164,45 +229,61 @@ const Heatmap = ({ uid }: HeatmapProps) => {
             {uid && !loading && !error && !hasActivity && (
                 <EmptyState message="No activity yet. Solve or attempt a problem to start filling the heatmap." />
             )}
+
+            {/* Heatmap grid */}
             {uid && !loading && hasActivity && (
                 <>
                     <div className="overflow-x-auto scrollbar-thin-dark">
-                        <div className="relative inline-flex flex-col">
+                        <div className="inline-flex flex-col">
+                            {/* Month labels */}
                             <div className="flex mb-1">
-                                <div className="flex flex-col gap-0.5 mr-1.5">
+                                <div className="flex flex-col gap-0.5 mr-1.5" style={{ width: `${DAY_LABELS.reduce((w, l) => Math.max(w, l.length), 0) * 6 + 2}px` }} aria-hidden="true">
                                     {DAY_LABELS.map((_, i) => (
-                                        <div key={i} className="h-3" />
+                                        <div key={i} style={{ height: `${CELL}px` }} />
                                     ))}
                                 </div>
-                                <div className="flex gap-0.5">
+                                <div className="flex" style={{ gap: `${GAP}px` }}>
                                     {weeks.map((_, weekIdx) => {
                                         const ml = monthLabels.find((m) => m.weekIndex === weekIdx);
                                         return (
                                             <div
                                                 key={weekIdx}
-                                                className="text-[10px] font-medium leading-none text-zinc-500 truncate"
-                                                style={{ width: "12px" }}
+                                                className="relative shrink-0"
+                                                style={{ width: `${CELL}px` }}
                                             >
-                                                {ml ? ml.label : ""}
+                                                {ml && (
+                                                    <span
+                                                        className="absolute top-0 left-0 text-[10px] font-medium leading-none text-zinc-500 whitespace-nowrap pointer-events-none"
+                                                        style={{ zIndex: 1 }}
+                                                    >
+                                                        {ml.label}
+                                                    </span>
+                                                )}
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
+
+                            {/* Grid body */}
                             <div className="flex">
-                                <div className="flex flex-col gap-0.5 mr-1.5">
+                                <div
+                                    className="flex flex-col mr-1.5"
+                                    style={{ gap: `${GAP}px`, width: `${DAY_LABELS.reduce((w, l) => Math.max(w, l.length), 0) * 6 + 2}px` }}
+                                >
                                     {DAY_LABELS.map((label, i) => (
                                         <div
                                             key={i}
-                                            className="flex h-3 items-center text-[10px] text-zinc-500 leading-none"
+                                            className="flex items-center text-[10px] text-zinc-500 leading-none"
+                                            style={{ height: `${CELL}px` }}
                                         >
                                             {label}
                                         </div>
                                     ))}
                                 </div>
-                                <div className="flex gap-0.5">
+                                <div className="flex" style={{ gap: `${GAP}px` }}>
                                     {weeks.map((week, weekIdx) => (
-                                        <div key={weekIdx} className="flex flex-col gap-0.5">
+                                        <div key={weekIdx} className="flex flex-col" style={{ gap: `${GAP}px` }}>
                                             {week.map((day) => {
                                                 const isToday = day.date === todayStr;
                                                 return (
@@ -210,7 +291,8 @@ const Heatmap = ({ uid }: HeatmapProps) => {
                                                         key={day.date}
                                                         title={`${new Date(day.date).toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}: ${getCellLabel(day.count)}`}
                                                         aria-label={`${new Date(day.date).toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}: ${getCellLabel(day.count)}`}
-                                                        className={`h-3 w-3 rounded-sm ${getCellColor(day.count)} ${isToday ? "ring-1 ring-green-300 ring-offset-[1.5px] ring-offset-zinc-900" : ""} cursor-pointer`}
+                                                        className={`rounded-sm cursor-pointer shrink-0 ${getCellColor(day.count)} ${isToday ? "ring-1 ring-green-300 ring-offset-[1.5px] ring-offset-zinc-900" : ""}`}
+                                                        style={{ width: `${CELL}px`, height: `${CELL}px` }}
                                                         onMouseEnter={(e) => handleMouseEnter(day, e)}
                                                         onMouseLeave={handleMouseLeave}
                                                     />
@@ -223,30 +305,23 @@ const Heatmap = ({ uid }: HeatmapProps) => {
                         </div>
                     </div>
 
+                    {/* Legend */}
                     <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-zinc-500">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                             <span>Less</span>
-                            {[0, 1, 2, 4, 6, 10].map((count) => (
+                            {LEVELS.map((count) => (
                                 <span
                                     key={count}
                                     aria-label={`${count} activity level`}
-                                    className={`h-3 w-3 rounded-sm ${getCellColor(count)}`}
+                                    className={`rounded-sm ${getCellColor(count)}`}
+                                    style={{ width: `${CELL}px`, height: `${CELL}px` }}
                                 />
                             ))}
                             <span>More</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            {stats.currentStreak > 0 && (
-                                <span className="text-green-400">
-                                    🔥 Current streak: {stats.currentStreak} day{stats.currentStreak !== 1 ? "s" : ""}
-                                </span>
-                            )}
-                            {stats.maxStreak > 1 && (
-                                <span>Best streak: {stats.maxStreak} days</span>
-                            )}
-                        </div>
                     </div>
 
+                    {/* Tooltip */}
                     {tooltip && (
                         <div
                             className="fixed z-50 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-white shadow-lg pointer-events-none"
