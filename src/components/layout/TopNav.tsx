@@ -29,8 +29,8 @@ const navigationItems = [
     enabled: true,
   },
   {
-    label: "Analytics",
-    href: "/analytics",
+    label: "Progress",
+    href: "/progress",
     icon: BarChart3,
     enabled: true,
   },
