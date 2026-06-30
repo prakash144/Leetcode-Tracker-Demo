@@ -6,10 +6,14 @@ import ErrorState from "@/components/states/ErrorState";
 import EmptyState from "@/components/states/EmptyState";
 import LoadingState from "@/components/states/LoadingState";
 
-type TimeRange = "current" | "90d" | "30d";
+type TimeRange = "current" | "2025" | "2024" | "2023" | "180d" | "90d" | "30d";
 
 const TIME_RANGES: { label: string; value: TimeRange }[] = [
     { label: "Current", value: "current" },
+    { label: "2025", value: "2025" },
+    { label: "2024", value: "2024" },
+    { label: "2023", value: "2023" },
+    { label: "180 Days", value: "180d" },
     { label: "90 Days", value: "90d" },
     { label: "30 Days", value: "30d" },
 ];
@@ -28,7 +32,7 @@ const getCellColor = (count: number) => {
 };
 
 const getCellLabel = (count: number) => {
-    if (count === 0) return "No activity";
+    if (count === 0) return "No submissions";
     return `${count} ${count === 1 ? "submission" : "submissions"}`;
 };
 
@@ -124,20 +128,33 @@ const Heatmap = ({ uid }: HeatmapProps) => {
     const filteredDays = useMemo(() => {
         if (rawDays.length === 0) return [];
         const now = new Date();
-        let cutoff: Date;
         switch (timeRange) {
             case "30d":
-                cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                break;
+                return rawDays.filter((d) => {
+                    const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    return d.date >= cutoff.toISOString().slice(0, 10);
+                });
             case "90d":
-                cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-                break;
-            default:
-                cutoff = new Date(now.getTime() - 364 * 24 * 60 * 60 * 1000);
-                break;
+                return rawDays.filter((d) => {
+                    const cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                    return d.date >= cutoff.toISOString().slice(0, 10);
+                });
+            case "180d":
+                return rawDays.filter((d) => {
+                    const cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+                    return d.date >= cutoff.toISOString().slice(0, 10);
+                });
+            case "2023":
+                return rawDays.filter((d) => d.date.startsWith("2023-"));
+            case "2024":
+                return rawDays.filter((d) => d.date.startsWith("2024-"));
+            case "2025":
+                return rawDays.filter((d) => d.date.startsWith("2025-"));
+            default: {
+                const cutoff = new Date(now.getTime() - 364 * 24 * 60 * 60 * 1000);
+                return rawDays.filter((d) => d.date >= cutoff.toISOString().slice(0, 10));
+            }
         }
-        const cutoffStr = cutoff.toISOString().slice(0, 10);
-        return rawDays.filter((d) => d.date >= cutoffStr);
     }, [rawDays, timeRange]);
 
     const { weeks, monthLabels } = useMemo(() => buildCalendarData(filteredDays), [filteredDays]);
@@ -148,7 +165,6 @@ const Heatmap = ({ uid }: HeatmapProps) => {
 
     const handleMouseEnter = useCallback(
         (day: HeatmapDay, e: React.MouseEvent) => {
-            if (day.count === 0) return;
             const rect = (e.target as HTMLElement).getBoundingClientRect();
             setTooltip({
                 date: new Date(day.date).toLocaleDateString("en", {
