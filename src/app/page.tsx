@@ -22,10 +22,10 @@ const quickActions = [
   },
   {
     title: "Review Favorites",
-    description: "Favorites will become a dedicated view in the next phase.",
+    description: "Review your bookmarked problems from the dedicated favorites view.",
     href: "/favorites",
     icon: Bookmark,
-    enabled: false,
+    enabled: true,
   },
   {
     title: "View Analytics",

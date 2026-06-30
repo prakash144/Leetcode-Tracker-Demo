@@ -159,7 +159,7 @@ const QuestionTable = ({
                     <th className="px-4 py-3">Topic</th>
                     <th className="px-4 py-3 text-center">Status</th>
                     <th className="px-4 py-3 text-center">Attempted</th>
-                    <th className="px-4 py-3 text-center">★</th>
+                    <th className="px-4 py-3 text-center"><Star className="size-4 inline-block text-yellow-400" /></th>
                     <th className="px-4 py-3 text-center">Revision</th>
                     <th className="px-4 py-3 text-center">Notes</th>
                 </tr>
