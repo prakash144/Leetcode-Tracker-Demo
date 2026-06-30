@@ -1,16 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { CheckCircle2, Circle, Clock, Filter } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Circle, Clock, Search, X } from "lucide-react";
 import Footer from "@/app/components/Footer";
 import AppShell from "@/components/layout/AppShell";
 import PageHeader from "@/components/layout/PageHeader";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingState from "@/components/states/LoadingState";
-import MetricCard from "@/components/data-display/MetricCard";
 import DifficultyBadge from "@/components/data-display/DifficultyBadge";
-import TopicBreakdown from "@/features/analytics/components/TopicBreakdown";
-import DifficultyBreakdown from "@/features/analytics/components/DifficultyBreakdown";
+import DonutChart from "@/app/components/DonutChart";
+import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useProblemWorkspaceData } from "@/features/problems/hooks/useProblemWorkspaceData";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import type { Problem, UserProblemProgress } from "@/lib/progressTypes";
@@ -22,11 +22,37 @@ type ProgressEntry = {
   lastDate: Date;
 };
 
+type SortField = "lastSubmitted" | "title" | "difficulty";
+type SortOrder = "asc" | "desc";
+
+const PAGE_SIZES = [10, 25, 50] as const;
+
 const ProgressPage = () => {
   const { auth, progress, questionsState } = useProblemWorkspaceData();
   const stats = useDashboardStats(questionsState.questions, progress.progressMap);
-  const [filter, setFilter] = useState<"all" | "solved" | "attempted">("all");
+
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
+  const [topicFilter, setTopicFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<SortField>("lastSubmitted");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const toggleSort = useCallback((field: SortField) => {
+    setSortField((prev) => {
+      if (prev === field) {
+        setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
+        return prev;
+      }
+      setSortOrder("desc");
+      return field;
+    });
+    setCurrentPage(1);
+  }, []);
 
   const entries = useMemo(() => {
     const result: ProgressEntry[] = [];
@@ -46,24 +72,212 @@ const ProgressPage = () => {
         lastDate,
       });
     }
-    result.sort((a, b) => b.lastDate.getTime() - a.lastDate.getTime());
     return result;
   }, [progress.progressMap, questionsState.questions]);
 
+  const companies = useMemo(() => {
+    const set = new Set<string>();
+    for (const q of questionsState.questions) {
+      if (q.company) set.add(q.company);
+    }
+    return Array.from(set).sort();
+  }, [questionsState.questions]);
+
+  const topics = useMemo(() => {
+    const set = new Set<string>();
+    for (const q of questionsState.questions) {
+      for (const t of q.topics) if (t) set.add(t);
+    }
+    return Array.from(set).sort();
+  }, [questionsState.questions]);
+
   const filtered = useMemo(() => {
     let result = entries;
-    if (filter === "solved") result = result.filter((e) => e.progress.solved);
-    if (filter === "attempted") result = result.filter((e) => e.progress.attempted && !e.progress.solved);
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
       result = result.filter((e) => e.problem.title.toLowerCase().includes(q));
     }
+    if (difficultyFilter !== "all") {
+      result = result.filter((e) => e.problem.difficulty === difficultyFilter);
+    }
+    if (statusFilter === "solved") {
+      result = result.filter((e) => e.progress.solved);
+    } else if (statusFilter === "attempted") {
+      result = result.filter((e) => e.progress.attempted && !e.progress.solved);
+    } else if (statusFilter === "unsolved") {
+      result = result.filter((e) => !e.progress.solved);
+    }
+    if (companyFilter !== "all") {
+      result = result.filter((e) => e.problem.company === companyFilter);
+    }
+    if (topicFilter !== "all") {
+      result = result.filter((e) => e.problem.topics.includes(topicFilter));
+    }
     return result;
-  }, [entries, filter, search]);
+  }, [entries, debouncedSearch, difficultyFilter, statusFilter, companyFilter, topicFilter]);
+
+  const sorted = useMemo(() => {
+    const result = [...filtered];
+    result.sort((a, b) => {
+      let cmp: number;
+      switch (sortField) {
+        case "title":
+          cmp = a.problem.title.localeCompare(b.problem.title);
+          break;
+        case "difficulty": {
+          const order = { Easy: 1, Medium: 2, Hard: 3 };
+          cmp = (order[a.problem.difficulty as keyof typeof order] || 0) - (order[b.problem.difficulty as keyof typeof order] || 0);
+          break;
+        }
+        default:
+          cmp = a.lastDate.getTime() - b.lastDate.getTime();
+          break;
+      }
+      return sortOrder === "asc" ? cmp : -cmp;
+    });
+    return result;
+  }, [filtered, sortField, sortOrder]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const paginated = useMemo(() => {
+    const from = (currentPage - 1) * pageSize;
+    return sorted.slice(from, from + pageSize);
+  }, [sorted, currentPage, pageSize]);
 
   const totalSubmissions = entries.length;
   const acceptedCount = entries.filter((e) => e.progress.solved).length;
   const acceptanceRate = totalSubmissions > 0 ? Math.round((acceptedCount / totalSubmissions) * 100) : 0;
+
+  const solvedThisWeek = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    return entries.filter((e) => e.progress.solved && e.progress.solvedAt && e.progress.solvedAt.seconds * 1000 >= weekAgo).length;
+  }, [entries]);
+
+  const solvedThisMonth = useMemo(() => {
+    const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    return entries.filter((e) => e.progress.solved && e.progress.solvedAt && e.progress.solvedAt.seconds * 1000 >= monthAgo).length;
+  }, [entries]);
+
+  const currentStreak = useMemo(() => {
+    const solvedDates = new Set<string>();
+    for (const e of entries) {
+      if (e.progress.solved && e.progress.solvedAt) {
+        solvedDates.add(new Date(e.progress.solvedAt.seconds * 1000).toISOString().slice(0, 10));
+      }
+    }
+    if (solvedDates.size === 0) return 0;
+    let streak = 0;
+    for (let i = 0; i < 365; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      if (solvedDates.has(d.toISOString().slice(0, 10))) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }, [entries]);
+
+  const maxStreak = useMemo(() => {
+    const solvedDates = new Set<string>();
+    for (const e of entries) {
+      if (e.progress.solved && e.progress.solvedAt) {
+        solvedDates.add(new Date(e.progress.solvedAt.seconds * 1000).toISOString().slice(0, 10));
+      }
+    }
+    if (solvedDates.size === 0) return 0;
+    const allDates = Array.from(solvedDates).sort();
+    let maxStreak = 0;
+    let streak = 0;
+    let prevDate: Date | null = null;
+    for (const dateStr of allDates) {
+      const d = new Date(dateStr);
+      if (prevDate) {
+        const diff = (d.getTime() - prevDate.getTime()) / (24 * 60 * 60 * 1000);
+        if (diff === 1) {
+          streak++;
+        } else {
+          streak = 1;
+        }
+      } else {
+        streak = 1;
+      }
+      maxStreak = Math.max(maxStreak, streak);
+      prevDate = d;
+    }
+    return maxStreak;
+  }, [entries]);
+
+  const avgDaily = useMemo(() => {
+    if (entries.length === 0) return 0;
+    const oldest = entries.reduce((min, e) => (e.lastDate < min ? e.lastDate : min), entries[0].lastDate);
+    const days = Math.max(1, Math.ceil((Date.now() - oldest.getTime()) / (24 * 60 * 60 * 1000)));
+    return Math.round((totalSubmissions / days) * 10) / 10;
+  }, [entries, totalSubmissions]);
+
+  const avgWeekly = useMemo(() => {
+    if (entries.length === 0) return 0;
+    const oldest = entries.reduce((min, e) => (e.lastDate < min ? e.lastDate : min), entries[0].lastDate);
+    const weeks = Math.max(1, Math.ceil((Date.now() - oldest.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+    return Math.round((totalSubmissions / weeks) * 10) / 10;
+  }, [entries, totalSubmissions]);
+
+  const insights = useMemo(() => {
+    const topicStats = new Map<string, { solved: number; total: number }>();
+    for (const e of entries) {
+      for (const t of e.problem.topics) {
+        if (!t) continue;
+        const s = topicStats.get(t) || { solved: 0, total: 0 };
+        s.total++;
+        if (e.progress.solved) s.solved++;
+        topicStats.set(t, s);
+      }
+    }
+    const topicEntries = Array.from(topicStats.entries()).map(([name, s]) => ({
+      name, rate: s.total > 0 ? s.solved / s.total : 0, solved: s.solved, total: s.total,
+    }));
+    const sortedByRate = [...topicEntries].sort((a, b) => b.rate - a.rate);
+    const strongest = sortedByRate.filter((t) => t.total >= 2).slice(0, 3);
+    const weakest = sortedByRate.filter((t) => t.total >= 2).reverse().slice(0, 3);
+    const companyCount = new Map<string, number>();
+    for (const e of entries) {
+      if (e.problem.company) {
+        companyCount.set(e.problem.company, (companyCount.get(e.problem.company) || 0) + 1);
+      }
+    }
+    const topCompany = Array.from(companyCount.entries()).sort((a, b) => b[1] - a[1])[0];
+    const avgAttempts = entries.length > 0 ? Math.round((totalSubmissions / entries.length) * 10) / 10 : 0;
+    return { strongest, weakest, topCompany: topCompany?.[0] || null, topCompanyCount: topCompany?.[1] || 0, avgAttempts };
+  }, [entries, totalSubmissions]);
+
+  const monthlyTrend = useMemo(() => {
+    const byMonth = new Map<string, number>();
+    for (const e of entries) {
+      const monthKey = `${e.lastDate.getFullYear()}-${String(e.lastDate.getMonth() + 1).padStart(2, "0")}`;
+      byMonth.set(monthKey, (byMonth.get(monthKey) || 0) + 1);
+    }
+    return Array.from(byMonth.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-6);
+  }, [entries]);
+
+  const donutSegments = useMemo(() => {
+    const colorMap: Record<string, string> = { Easy: "#22c55e", Medium: "#eab308", Hard: "#ef4444" };
+    return stats.difficultyStats.map((d) => ({
+      name: d.name, value: d.solved, color: colorMap[d.name] || "#6366f1",
+    }));
+  }, [stats.difficultyStats]);
+
+  const hasEntries = entries.length > 0;
+  const hasFilteredResults = paginated.length > 0;
+  const isLoading = questionsState.loading || progress.loading;
+  const hasError = questionsState.error || auth.error || progress.error;
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="size-3 ml-1 opacity-40" />;
+    return sortOrder === "asc" ? <ArrowUp className="size-3 ml-1" /> : <ArrowDown className="size-3 ml-1" />;
+  };
 
   return (
     <AppShell
@@ -80,144 +294,248 @@ const ProgressPage = () => {
         description="Review your detailed coding history, submission stats, and progress trends."
       />
 
-      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:px-6 lg:px-8 pb-12">
-        {auth.error && <ErrorState message={auth.error} />}
-        {progress.loading && <LoadingState message="Loading progress data..." />}
+      <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8 pb-12">
+        {hasError && <ErrorState message={hasError} />}
+        {isLoading && <LoadingState message="Loading progress data..." />}
 
-        {!auth.user && (
+        {!auth.user && !isLoading && (
           <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/70 px-4 py-12 text-center">
             <Clock className="mx-auto size-10 text-zinc-600 mb-3" />
             <p className="text-sm text-zinc-400">Sign in to track your practice history and progress.</p>
           </div>
         )}
 
-        {auth.user && !progress.loading && (
-          <>
-            {/* Summary Panel */}
-            <div className="grid gap-4 lg:grid-cols-4">
-              <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <MetricCard label="Solved" value={`${stats.solved}/${stats.total}`} />
-                <MetricCard label="Acceptance" value={`${acceptanceRate}%`} />
-                <MetricCard label="Submissions" value={totalSubmissions} />
-                <MetricCard label="Streak" value={stats.solvedPercent > 0 ? `${stats.solvedPercent}%` : "—"} />
+        {auth.user && !isLoading && !hasError && (
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-1 min-w-0 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-1 min-w-[160px] max-w-xs">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search problems..."
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-800 pl-8 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-green-500 focus:outline-none"
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  )}
+                </div>
+                <select
+                  value={difficultyFilter}
+                  onChange={(e) => { setDifficultyFilter(e.target.value); setCurrentPage(1); }}
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 focus:border-green-500 focus:outline-none"
+                >
+                  <option value="all">All Difficulties</option>
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 focus:border-green-500 focus:outline-none"
+                >
+                  <option value="all">All Status</option>
+                  <option value="solved">Solved</option>
+                  <option value="attempted">Attempted</option>
+                  <option value="unsolved">Unsolved</option>
+                </select>
+                <select
+                  value={companyFilter}
+                  onChange={(e) => { setCompanyFilter(e.target.value); setCurrentPage(1); }}
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 max-w-[140px] focus:border-green-500 focus:outline-none"
+                >
+                  <option value="all">All Companies</option>
+                  {companies.map((c) => (<option key={c} value={c}>{c}</option>))}
+                </select>
+                <select
+                  value={topicFilter}
+                  onChange={(e) => { setTopicFilter(e.target.value); setCurrentPage(1); }}
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 max-w-[140px] focus:border-green-500 focus:outline-none"
+                >
+                  <option value="all">All Topics</option>
+                  {topics.slice(0, 30).map((t) => (<option key={t} value={t}>{t}</option>))}
+                  {topics.length > 30 && <option disabled>— more —</option>}
+                </select>
+                <span className="text-xs text-zinc-500 ml-auto">{sorted.length} result{sorted.length !== 1 ? "s" : ""}</span>
               </div>
-              <div className="lg:col-span-1 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Difficulty</h3>
+
+              {hasFilteredResults ? (
+                <div className="overflow-x-auto rounded-xl border border-zinc-800">
+                  <table className="w-full text-sm text-left text-zinc-300" aria-label="Practice history">
+                    <thead className="sticky top-0 bg-zinc-900 text-xs uppercase text-zinc-500 border-b border-zinc-800 z-10">
+                      <tr>
+                        <th className="px-4 py-3">
+                          <button type="button" onClick={() => toggleSort("lastSubmitted")} className="inline-flex items-center hover:text-zinc-300 transition-colors">
+                            Last Submitted <SortIcon field="lastSubmitted" />
+                          </button>
+                        </th>
+                        <th className="px-4 py-3">
+                          <button type="button" onClick={() => toggleSort("title")} className="inline-flex items-center hover:text-zinc-300 transition-colors">
+                            Problem <SortIcon field="title" />
+                          </button>
+                        </th>
+                        <th className="px-4 py-3">
+                          <button type="button" onClick={() => toggleSort("difficulty")} className="inline-flex items-center hover:text-zinc-300 transition-colors">
+                            Difficulty <SortIcon field="difficulty" />
+                          </button>
+                        </th>
+                        <th className="px-4 py-3">Company</th>
+                        <th className="px-4 py-3">Last Result</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginated.map((entry) => (
+                        <tr key={entry.problem.problemId} className="border-b border-zinc-800 bg-zinc-900/50 transition-colors hover:bg-zinc-800/50">
+                          <td className="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap">{formatRelativeTime(entry.lastDate)}</td>
+                          <td className="px-4 py-3 font-medium">
+                            <a href={entry.problem.link} target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400 transition-colors">
+                              {entry.problem.title}
+                            </a>
+                          </td>
+                          <td className="px-4 py-3"><DifficultyBadge difficulty={entry.problem.difficulty} /></td>
+                          <td className="px-4 py-3 text-xs text-zinc-500">{entry.problem.company || "—"}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 text-xs font-medium ${entry.progress.solved ? "text-green-400" : "text-yellow-400"}`}>
+                              {entry.progress.solved ? <CheckCircle2 className="size-3.5" /> : <Circle className="size-3.5" />}
+                              {entry.lastAction}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/70 px-4 py-12 text-center">
+                  <p className="text-sm text-zinc-400">
+                    {!hasEntries ? "No practice history yet. Solve or attempt a problem to start tracking." : "No entries match the current filters."}
+                  </p>
+                </div>
+              )}
+
+              {hasFilteredResults && (
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
+                  <div className="flex items-center gap-2">
+                    <span>Rows per page:</span>
+                    <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-zinc-300 focus:outline-none">
+                      {PAGE_SIZES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                    </select>
+                    <span>Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, sorted.length)} of {sorted.length}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed">Prev</button>
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 5) { pageNum = i + 1; }
+                      else if (currentPage <= 3) { pageNum = i + 1; }
+                      else if (currentPage >= totalPages - 2) { pageNum = totalPages - 4 + i; }
+                      else { pageNum = currentPage - 2 + i; }
+                      return (<button key={pageNum} type="button" onClick={() => setCurrentPage(pageNum)} className={`rounded px-2 py-1 ${currentPage === pageNum ? "bg-green-500/15 text-green-300" : "border border-zinc-700 bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}>{pageNum}</button>);
+                    })}
+                    <button type="button" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <aside className="w-full lg:w-80 shrink-0 space-y-4">
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Overall Progress</h3>
                 <div className="space-y-2">
-                  {stats.difficultyStats.map((d) => (
-                    <div key={d.name} className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-400 capitalize">{d.name}</span>
-                      <span className="text-zinc-200 font-medium">{d.solved}/{d.total}</span>
-                    </div>
-                  ))}
+                  <div className="flex justify-between text-sm"><span className="text-zinc-400">Solved</span><span className="text-zinc-200 font-medium">{acceptedCount}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-zinc-400">Attempted</span><span className="text-zinc-200 font-medium">{totalSubmissions - acceptedCount}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-zinc-400">Submissions</span><span className="text-zinc-200 font-medium">{totalSubmissions}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-zinc-400">Acceptance</span><span className="text-green-400 font-medium">{acceptanceRate}%</span></div>
                 </div>
               </div>
-            </div>
 
-            {/* Breakdown Charts */}
-            <div className="grid gap-4 lg:grid-cols-2">
-              <DifficultyBreakdown items={stats.difficultyStats} />
-              <TopicBreakdown items={stats.topicStats} />
-            </div>
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Difficulty Breakdown</h3>
+                {donutSegments.some((s) => s.value > 0) ? (
+                  <div className="flex flex-col items-center">
+                    <DonutChart segments={donutSegments} size={140} strokeWidth={24} centerLabel={`${acceptedCount}`} centerSubLabel="solved" />
+                    <div className="flex flex-wrap justify-center gap-3 mt-3">
+                      {donutSegments.map((s) => (
+                        <div key={s.name} className="flex items-center gap-1.5 text-xs">
+                          <span className="size-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                          <span className="text-zinc-400">{s.name}</span>
+                          <span className="text-zinc-300 font-medium">{s.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (<p className="text-sm text-zinc-500 text-center py-4">No solved problems yet</p>)}
+              </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-xs text-zinc-500">
-                <Filter className="size-3.5" />
-                Filter:
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Monthly Submissions</h3>
+                {monthlyTrend.length > 0 ? (
+                  <div className="flex items-end gap-1.5 h-20">
+                    {monthlyTrend.map(([month, count]) => {
+                      const maxCount = Math.max(...monthlyTrend.map(([, c]) => c));
+                      const height = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+                      return (
+                        <div key={month} className="flex-1 flex flex-col items-center gap-1">
+                          <span className="text-[10px] text-zinc-500">{count}</span>
+                          <div className="w-full rounded-sm bg-green-500/60 transition-all duration-500" style={{ height: `${Math.max(height, 4)}%` }} />
+                          <span className="text-[9px] text-zinc-600 truncate w-full text-center">{month.split("-")[1]}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (<p className="text-sm text-zinc-500 text-center py-4">No data yet</p>)}
               </div>
-              {(["all", "solved", "attempted"] as const).map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setFilter(f)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                    filter === f
-                      ? "bg-green-500/15 text-green-300"
-                      : "text-zinc-400 hover:text-zinc-200 bg-zinc-800"
-                  }`}
-                >
-                  {f === "all" ? "All" : f === "solved" ? "Accepted" : "Attempted"}
-                </button>
-              ))}
-              <input
-                type="text"
-                placeholder="Search problems..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="ml-auto rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-green-500 focus:outline-none w-48"
-              />
-            </div>
 
-            {/* Practice History Table */}
-            {filtered.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/70 px-4 py-12 text-center">
-                <p className="text-sm text-zinc-400">
-                  {entries.length === 0
-                    ? "No practice history yet. Solve or attempt a problem to start tracking."
-                    : "No entries match the current filters."}
-                </p>
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Recent Statistics</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><div className="text-lg font-bold text-green-400">{solvedThisWeek}</div><div className="text-xs text-zinc-500">This Week</div></div>
+                  <div><div className="text-lg font-bold text-green-400">{solvedThisMonth}</div><div className="text-xs text-zinc-500">This Month</div></div>
+                  <div><div className="text-lg font-bold text-orange-400">{currentStreak}</div><div className="text-xs text-zinc-500">Current Streak</div></div>
+                  <div><div className="text-lg font-bold text-zinc-300">{maxStreak}</div><div className="text-xs text-zinc-500">Max Streak</div></div>
+                  <div><div className="text-lg font-bold text-zinc-300">{avgDaily}</div><div className="text-xs text-zinc-500">Avg Daily</div></div>
+                  <div><div className="text-lg font-bold text-zinc-300">{avgWeekly}</div><div className="text-xs text-zinc-500">Avg / Week</div></div>
+                </div>
               </div>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-zinc-800">
-                <table className="w-full text-sm text-left text-zinc-300" aria-label="Practice history">
-                  <thead className="bg-zinc-900 text-xs uppercase text-zinc-500 border-b border-zinc-800">
-                    <tr>
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3">Problem</th>
-                      <th className="px-4 py-3">Difficulty</th>
-                      <th className="px-4 py-3">Result</th>
-                      <th className="px-4 py-3">Company</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((entry) => (
-                      <tr
-                        key={entry.problem.problemId}
-                        className="border-b border-zinc-800 bg-zinc-900/50 transition-colors hover:bg-zinc-800/50"
-                      >
-                        <td className="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap">
-                          {entry.lastDate.toLocaleDateString("en", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </td>
-                        <td className="px-4 py-3 font-medium">
-                          <a
-                            href={entry.problem.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-white hover:text-blue-400 transition-colors"
-                          >
-                            {entry.problem.title}
-                          </a>
-                        </td>
-                        <td className="px-4 py-3">
-                          <DifficultyBadge difficulty={entry.problem.difficulty} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex items-center gap-1 text-xs font-medium ${
-                              entry.progress.solved ? "text-green-400" : "text-yellow-400"
-                            }`}
-                          >
-                            {entry.progress.solved ? (
-                              <CheckCircle2 className="size-3.5" />
-                            ) : (
-                              <Circle className="size-3.5" />
-                            )}
-                            {entry.lastAction}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-zinc-500">{entry.problem.company}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Practice Insights</h3>
+                {entries.length > 0 ? (
+                  <div className="space-y-3 text-xs">
+                    {insights.strongest.length > 0 && (
+                      <div><div className="text-zinc-500 mb-1">Strongest Topics</div>
+                        {insights.strongest.map((t) => (
+                          <div key={t.name} className="flex justify-between text-zinc-300"><span className="truncate">{t.name}</span><span className="text-green-400 shrink-0 ml-2">{Math.round(t.rate * 100)}%</span></div>
+                        ))}
+                      </div>
+                    )}
+                    {insights.weakest.length > 0 && (
+                      <div><div className="text-zinc-500 mb-1">Weakest Topics</div>
+                        {insights.weakest.map((t) => (
+                          <div key={t.name} className="flex justify-between text-zinc-300"><span className="truncate">{t.name}</span><span className="text-red-400 shrink-0 ml-2">{Math.round(t.rate * 100)}%</span></div>
+                        ))}
+                      </div>
+                    )}
+                    {insights.topCompany && (
+                      <div><div className="text-zinc-500 mb-1">Most Practiced Company</div>
+                        <div className="text-zinc-300">{insights.topCompany} ({insights.topCompanyCount} problem{insights.topCompanyCount !== 1 ? "s" : ""})</div>
+                      </div>
+                    )}
+                    <div><div className="text-zinc-500 mb-1">Avg Attempts per Problem</div><div className="text-zinc-300">{insights.avgAttempts}</div></div>
+                  </div>
+                ) : (<p className="text-sm text-zinc-500 text-center py-2">No data to analyze</p>)}
               </div>
-            )}
-          </>
+            </aside>
+          </div>
         )}
       </div>
     </AppShell>
