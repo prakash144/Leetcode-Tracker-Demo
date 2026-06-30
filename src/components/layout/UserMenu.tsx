@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import type { User } from "firebase/auth";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, Moon, Settings, Sun, User as UserIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +33,14 @@ const UserMenu = ({
   onLogin,
   onLogout,
 }: UserMenuProps) => {
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+  };
+
   if (!user) {
     return (
       <Button
@@ -81,13 +91,42 @@ const UserMenu = ({
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-zinc-800" />
+        <DropdownMenuItem asChild className="cursor-pointer hover:bg-zinc-800">
+          <Link href="/settings" className="flex items-center gap-3">
+            <UserIcon className="size-4" />
+            My Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="cursor-pointer hover:bg-zinc-800">
+          <Link href="/settings" className="flex items-center gap-3">
+            <Settings className="size-4" />
+            Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={toggleTheme}
+          className="cursor-pointer hover:bg-zinc-800"
+        >
+          {theme === "dark" ? (
+            <span className="flex items-center gap-3">
+              <Sun className="size-4" />
+              Light Mode
+            </span>
+          ) : (
+            <span className="flex items-center gap-3">
+              <Moon className="size-4" />
+              Dark Mode
+            </span>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-zinc-800" />
         <DropdownMenuItem
           disabled={loading}
           onClick={onLogout}
           className="cursor-pointer hover:bg-zinc-800"
         >
           <LogOut className="size-4" />
-          Logout
+          Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -44,7 +44,7 @@ const navigationItems = [
     label: "Settings",
     href: "/settings",
     icon: Settings,
-    enabled: false,
+    enabled: true,
   },
 ];
 
