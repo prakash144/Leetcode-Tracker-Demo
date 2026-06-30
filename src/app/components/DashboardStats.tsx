@@ -2,6 +2,7 @@
 
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import type { Problem, ProgressMap } from "@/lib/progressTypes";
+import MetricCard from "@/components/data-display/MetricCard";
 
 interface DashboardStatsProps {
     questions: Problem[];
@@ -9,13 +10,6 @@ interface DashboardStatsProps {
 }
 
 type DashboardStatsValue = ReturnType<typeof useDashboardStats>;
-
-const StatPill = ({ label, value }: { label: string; value: string | number }) => (
-    <div className="bg-zinc-800 px-3 py-2 rounded-lg border border-zinc-700">
-        <div className="text-xs text-zinc-400">{label}</div>
-        <div className="text-lg font-semibold text-white">{value}</div>
-    </div>
-);
 
 const ProgressList = ({
                           title,
@@ -57,13 +51,13 @@ const DashboardStats = ({ questions, progressMap }: DashboardStatsProps) => {
 
     return (
         <section className="space-y-4 mb-4">
-            <div className="flex flex-wrap gap-4 text-sm font-medium text-zinc-300">
-                <StatPill label="Progress" value={`${stats.solvedPercent}%`} />
-                <StatPill label="Solved" value={`${stats.solved}/${stats.total}`} />
-                <StatPill label="Attempted" value={`${stats.attempted}/${stats.total}`} />
-                <StatPill label="Unsolved" value={stats.unsolved} />
-                <StatPill label="Bookmarked" value={stats.bookmarked} />
-                <StatPill label="Revision" value={stats.revision} />
+            <div className="flex flex-wrap gap-4">
+                <MetricCard label="Progress" value={`${stats.solvedPercent}%`} />
+                <MetricCard label="Solved" value={`${stats.solved}/${stats.total}`} />
+                <MetricCard label="Attempted" value={`${stats.attempted}/${stats.total}`} />
+                <MetricCard label="Unsolved" value={stats.unsolved} />
+                <MetricCard label="Bookmarked" value={stats.bookmarked} />
+                <MetricCard label="Revision" value={stats.revision} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

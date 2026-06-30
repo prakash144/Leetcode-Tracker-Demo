@@ -1,6 +1,8 @@
 import { RotateCcw, Star } from "lucide-react";
 import type { Problem, ProgressMap } from "@/lib/progressTypes";
 import EmptyState from "@/components/states/EmptyState";
+import DifficultyBadge from "@/components/data-display/DifficultyBadge";
+import TopicBadge from "@/components/data-display/TopicBadge";
 import {
     type ProblemStatusFilter,
     useFilteredProblems,
@@ -70,16 +72,6 @@ const QuestionTable = ({
     const filteredAttempted = filteredQuestions.filter((q) => progressMap[q.problemId]?.attempted);
     const filteredBookmarked = filteredQuestions.filter((q) => progressMap[q.problemId]?.bookmarked);
     const filteredRevision = filteredQuestions.filter((q) => progressMap[q.problemId]?.inRevisionList);
-
-    // Utility function to get color based on difficulty
-    const getDifficultyColor = (difficulty: string) => {
-        switch (difficulty.toLowerCase()) {
-            case "easy": return "text-green-400";
-            case "medium": return "text-yellow-400";
-            case "hard": return "text-red-400";
-            default: return "text-white";
-        }
-    };
 
     const requireProgressOrRun = (action: () => void) => {
         if (!progressEnabled) {
@@ -192,7 +184,7 @@ const QuestionTable = ({
                     const progress = progressMap[q.problemId];
 
                     return (
-                    <tr key={`${q.company}-${q.list}-${q.problemId}`} className="bg-zinc-800 border-b border-zinc-700 hover:bg-zinc-700/40">
+                    <tr key={`${q.company}-${q.list}-${q.problemId}`} className="bg-zinc-800 border-b border-zinc-700 transition-colors duration-150 hover:bg-zinc-700/40">
                         <td className="px-4 py-3 text-zinc-400">{range.from + index}</td>
                         <td className="px-4 py-3 font-medium">
                             <a href={q.link} target="_blank" rel="noopener noreferrer" title={q.title} className="text-white hover:text-blue-500 transition-colors">
@@ -202,18 +194,16 @@ const QuestionTable = ({
                         <td className="px-4 py-3">
                             {typeof q.acceptanceRate === "number" ? q.acceptanceRate.toFixed(2) : q.acceptanceRate}
                         </td>
-                        <td className={`px-4 py-3 font-semibold ${getDifficultyColor(q.difficulty)}`}>
-                            {q.difficulty}
+                        <td className="px-4 py-3">
+                            <DifficultyBadge difficulty={q.difficulty} />
                         </td>
                         <td className="px-4 py-3">{q.frequency}</td>
                         <td className="px-4 py-3">
-                            {q.topicTag.split(",").map((topic, i) => {
-                                const trimmedTopic = topic.trim();
-                                const isSelected = selectedTopics.includes(trimmedTopic);
+                            {q.topicTag.split(",").map((topic) => {
+                                const trimmed = topic.trim();
+                                const isSelected = selectedTopics.includes(trimmed);
                                 return (
-                                    <span key={i} className={`inline-block px-2 py-1 mr-2 mb-2 text-sm text-white rounded-md ${isSelected ? 'bg-blue-500' : 'bg-zinc-700'}`}>
-                                            {trimmedTopic}
-                                        </span>
+                                    <TopicBadge key={trimmed} topic={trimmed} active={isSelected} className="mr-1 mb-1" />
                                 );
                             })}
                         </td>

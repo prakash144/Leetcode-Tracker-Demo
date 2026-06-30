@@ -149,9 +149,29 @@
     @apply border-green-500/50 bg-green-500/15 text-green-200;
   }
 
+  .app-transition {
+    @apply transition-colors duration-150;
+  }
+
   .scrollbar-thin-dark {
     scrollbar-color: rgb(63 63 70) transparent;
     scrollbar-width: thin;
+  }
+
+  .status-solved {
+    @apply text-green-400;
+  }
+
+  .status-attempted {
+    @apply text-blue-400;
+  }
+
+  .status-bookmarked {
+    @apply text-yellow-300;
+  }
+
+  .status-revision {
+    @apply text-cyan-300;
   }
 }
 

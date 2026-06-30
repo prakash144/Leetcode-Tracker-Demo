@@ -2,6 +2,8 @@
 
 import { RotateCcw, Star } from "lucide-react";
 import type { Problem, ProgressMap } from "@/lib/progressTypes";
+import DifficultyBadge from "@/components/data-display/DifficultyBadge";
+import TopicBadge from "@/components/data-display/TopicBadge";
 import NotesDialog from "@/app/components/NotesDialog";
 
 interface ProblemCardListProps {
@@ -16,15 +18,6 @@ interface ProblemCardListProps {
   onToggleRevision: (problem: Problem) => void;
   onSaveNotes: (problem: Problem, notes: string) => void;
 }
-
-const getDifficultyColor = (difficulty: string) => {
-  switch (difficulty.toLowerCase()) {
-    case "easy": return "text-green-400 bg-green-400/10 border-green-400/20";
-    case "medium": return "text-yellow-400 bg-yellow-400/10 border-yellow-400/20";
-    case "hard": return "text-red-400 bg-red-400/10 border-red-400/20";
-    default: return "text-zinc-400 bg-zinc-800 border-zinc-700";
-  }
-};
 
 const ProblemCardList = ({
   problems,
@@ -58,7 +51,7 @@ const ProblemCardList = ({
         return (
           <div
             key={`${q.company}-${q.list}-${q.problemId}`}
-            className="rounded-lg border border-zinc-800 bg-zinc-900 p-3"
+            className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-colors hover:border-zinc-700"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -73,11 +66,7 @@ const ProblemCardList = ({
                 </a>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span
-                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getDifficultyColor(q.difficulty)}`}
-                >
-                  {q.difficulty}
-                </span>
+                <DifficultyBadge difficulty={q.difficulty} />
                 <button
                   type="button"
                   onClick={() => requireProgressOrRun(() => onToggleBookmarked(q))}
@@ -95,14 +84,7 @@ const ProblemCardList = ({
             <div className="mt-1.5 flex flex-wrap gap-1">
               {q.topicTag.split(",").map((topic) => {
                 const trimmed = topic.trim();
-                return (
-                  <span
-                    key={trimmed}
-                    className="rounded-md bg-zinc-800 px-1.5 py-0.5 text-xs text-zinc-400"
-                  >
-                    {trimmed}
-                  </span>
-                );
+                return <TopicBadge key={trimmed} topic={trimmed} />;
               })}
             </div>
 
