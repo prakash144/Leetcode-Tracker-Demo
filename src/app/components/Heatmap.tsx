@@ -175,16 +175,16 @@ const Heatmap = ({ uid }: HeatmapProps) => {
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <h2 className="text-sm font-semibold text-zinc-200">Activity</h2>
                 {uid && !loading && (
-                    <div className="flex rounded-md border border-zinc-700 overflow-hidden">
+                    <div className="flex gap-0.5">
                         {TIME_RANGES.map((tr) => (
                             <button
                                 key={tr.value}
                                 type="button"
                                 onClick={() => setTimeRange(tr.value)}
-                                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                                className={`px-2 py-0.5 text-xs font-medium rounded-full transition-colors ${
                                     timeRange === tr.value
-                                        ? "bg-green-500/15 text-green-300 border-r border-zinc-700 last:border-r-0"
-                                        : "bg-zinc-800 text-zinc-400 hover:text-zinc-200 border-r border-zinc-700 last:border-r-0"
+                                        ? "bg-green-500/15 text-green-300"
+                                        : "text-zinc-500 hover:text-zinc-300"
                                 }`}
                             >
                                 {tr.label}
@@ -236,25 +236,20 @@ const Heatmap = ({ uid }: HeatmapProps) => {
                     <div className="overflow-x-auto scrollbar-thin-dark">
                         <div className="inline-flex flex-col">
                             {/* Month labels */}
-                            <div className="flex mb-1">
-                                <div className="flex flex-col gap-0.5 mr-1.5" style={{ width: `${DAY_LABELS.reduce((w, l) => Math.max(w, l.length), 0) * 6 + 2}px` }} aria-hidden="true">
-                                    {DAY_LABELS.map((_, i) => (
-                                        <div key={i} style={{ height: `${CELL}px` }} />
-                                    ))}
-                                </div>
+                            <div className="flex mb-1" style={{ height: `${CELL}px` }}>
+                                <div className="shrink-0 mr-1.5" style={{ width: `${DAY_LABELS.reduce((w, l) => Math.max(w, l.length), 0) * 6 + 2}px` }} aria-hidden="true" />
                                 <div className="flex" style={{ gap: `${GAP}px` }}>
                                     {weeks.map((_, weekIdx) => {
                                         const ml = monthLabels.find((m) => m.weekIndex === weekIdx);
                                         return (
                                             <div
                                                 key={weekIdx}
-                                                className="relative shrink-0"
+                                                className="shrink-0"
                                                 style={{ width: `${CELL}px` }}
                                             >
                                                 {ml && (
                                                     <span
-                                                        className="absolute top-0 left-0 text-[10px] font-medium leading-none text-zinc-500 whitespace-nowrap pointer-events-none"
-                                                        style={{ zIndex: 1 }}
+                                                        className="block text-[10px] font-medium leading-none text-zinc-500 truncate pointer-events-none"
                                                     >
                                                         {ml.label}
                                                     </span>
