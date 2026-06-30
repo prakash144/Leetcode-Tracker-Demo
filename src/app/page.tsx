@@ -51,7 +51,7 @@ const DashboardPage = () => {
       <PageHeader
         eyebrow="Dashboard"
         title="Progress Overview"
-        description="Monitor your LeetCode progress and jump into the problem workspace when you are ready to practice."
+        description="Track your journey. Crack your dream company. 🚀"
         actions={
           <Button
             asChild

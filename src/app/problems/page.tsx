@@ -22,7 +22,7 @@ const ProblemsPage = () => {
       <PageHeader
         eyebrow="Problems"
         title="Problem Workspace"
-        description="Browse company-wise LeetCode problems, filter the dataset, and update your progress."
+        description="Master coding interviews one problem at a time. Browse, filter, and track your progress."
       />
       <ProblemWorkspace workspace={workspace} />
     </AppShell>

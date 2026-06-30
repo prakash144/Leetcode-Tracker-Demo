@@ -19,7 +19,7 @@ interface FetchQuestionsContext {
 
 // Utility to fetch and parse the CSV file
 const fetchCSV = async (url: string): Promise<CsvItem[]> => {
-    const cacheKey = `leetcode-tracker:csv:${url}`;
+    const cacheKey = `interviewtracly:csv:${url}`;
     const cachedText =
         typeof window !== "undefined" ? window.sessionStorage.getItem(cacheKey) : null;
     let text = cachedText;

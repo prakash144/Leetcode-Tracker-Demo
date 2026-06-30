@@ -1,6 +1,10 @@
-# 🧮 LeetCode Tracker
+# 🎯 Interview Tracly
 
-A sleek and simple web app to track your LeetCode problem-solving progress. Easily browse, filter, and mark problems as solved, while staying up to date with the latest additions and updates.
+Master Coding Interviews.
+
+Track your journey. Crack your dream company. 🚀
+
+A modern web app to track your coding problem-solving progress. Easily browse, filter, and mark problems as solved while staying up to date with the latest company-wise problem sets.
 
 > 📅 **Problem Set – Updated on 20 Jun 2025**
 
@@ -8,26 +12,28 @@ A sleek and simple web app to track your LeetCode problem-solving progress. Easi
 
 ## 🌐 Live Site
 
-🔗 [Visit LeetCode Tracker](https://prakash144.github.io/Leetcode-Tracker-Demo/)
+🔗 [Visit Interview Tracly](https://prakash144.github.io/Interview-Tracly/)
 
 ---
 
 ## 📌 Features
 
-- ✅ Track your progress across LeetCode problems
-- 🏷️ Filter by topic, difficulty, or status (Solved / Unsolved)
-- 📅 See when the problem set was last updated
+- ✅ Track your progress across company-wise coding problems
+- 🏷️ Filter by company, topic, difficulty, or status (Solved / Attempted / Unsolved)
+- ⭐ Bookmark favorites for quick review
+- 📊 Analytics dashboard with difficulty and topic breakdowns
+- 🔥 Activity heatmap to visualize your consistency
 - 🔍 Search problems by name or number
+- 📱 Fully responsive design (desktop, tablet, mobile)
 - 🧠 Perfect for interview prep and daily challenges
-- 📘 Clean, responsive UI focused on productivity
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Next.js
+- **Frontend:** Next.js (App Router)
 - **State Management:** React hooks
-- **Styling:** Tailwind CSS / Styled Components
+- **Styling:** Tailwind CSS / shadcn UI
 - **Data Source:** Dynamic GitHub CSV/API problem metadata
 - **Persistence:** Firebase Authentication and Cloud Firestore for user progress
 - **Deployment:** GitHub Pages
@@ -36,7 +42,7 @@ A sleek and simple web app to track your LeetCode problem-solving progress. Easi
 
 ## Firebase Setup
 
-The app is still statically hosted on GitHub Pages. Firebase is used from the client SDK only.
+The app is statically hosted on GitHub Pages. Firebase is used from the client SDK only.
 
 Create `.env.local` from `.env.example`:
 

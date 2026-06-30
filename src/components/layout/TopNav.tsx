@@ -62,15 +62,15 @@ const TopNav = ({
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="flex min-w-0 items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-sm font-semibold text-green-400">
-              LC
-            </div>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-base" role="img" aria-label="Interview Tracly">
+              🎯
+            </span>
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold text-white">
-                LeetCode Tracker
+                Interview Tracly
               </div>
               <div className="hidden text-xs text-zinc-500 sm:block">
-                Personal progress workspace
+                Master Technical Interviews
               </div>
             </div>
           </Link>
