@@ -32,13 +32,13 @@ const navigationItems = [
     label: "Analytics",
     href: "/analytics",
     icon: BarChart3,
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Favorites",
     href: "/favorites",
     icon: Bookmark,
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Settings",

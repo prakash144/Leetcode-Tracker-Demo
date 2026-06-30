@@ -82,19 +82,22 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
             <Dialog.Trigger asChild>
                 <Button
                     variant="outline"
-                    className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
+                    className="max-w-[14rem] justify-between truncate text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md sm:max-w-xs"
+                    aria-label="Open topic selector"
                 >
-                    {selectedTopic.size > 0
-                        ? Array.from(selectedTopic).join(", ")
-                        : "Topic"}{" "}
+                    <span className="truncate">
+                        {selectedTopic.size > 0
+                            ? Array.from(selectedTopic).join(", ")
+                            : "Topic"}
+                    </span>{" "}
                     <ChevronDown size={16} />
                 </Button>
             </Dialog.Trigger>
 
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+                <Dialog.Overlay className="fixed inset-0 bg-black/60" />
                 <Dialog.Content
-                    className="fixed top-1/2 left-1/2 max-w-md w-full bg-zinc-900 border border-zinc-700 text-white p-6 rounded-lg -translate-x-1/2 -translate-y-1/2 z-50">
+                    className="fixed top-1/2 left-1/2 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-hidden bg-zinc-900 border border-zinc-700 text-white p-4 rounded-xl -translate-x-1/2 -translate-y-1/2 z-50 sm:p-6">
                     <div className="p-4 border-b border-zinc-700">
                         <Dialog.Title asChild>
                             <h2 className="text-xl font-semibold text-white">Topics</h2>
@@ -113,17 +116,17 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
                         />
                     </div>
 
-                    <div className="h-64 pr-2 p-4 overflow-y-auto">
+                    <div className="h-64 pr-2 p-4 overflow-y-auto scrollbar-thin-dark">
                         {filteredTopics.map(({ category, subtopics }) => (
                             subtopics.length > 0 && (
                                 <div key={category} className="mb-6">
                                     <h3 className="text-lg font-semibold text-white mb-2">{category}</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {subtopics.map((topic) => (
-                                            <span
+                                            <button
+                                                type="button"
                                                 key={topic}
                                                 onClick={() => toggleTopicSelection(topic)}
-                                                role="button"
                                                 aria-pressed={selectedTopic.has(topic)}
                                                 className={`px-3 py-1 text-xs rounded-full cursor-pointer transition-all duration-200 ease-in-out border ${
                                                     selectedTopic.has(topic)
@@ -133,7 +136,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ selectedTopics, onTopicCh
                                                 aria-label={selectedTopic.has(topic) ? `Deselect ${topic}` : `Select ${topic}`}
                                             >
                                                 {topic}
-                                            </span>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>

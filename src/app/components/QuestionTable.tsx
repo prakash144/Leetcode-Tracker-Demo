@@ -214,10 +214,21 @@ const QuestionTable = ({
                         </td>
                         <td className="px-4 py-3 text-center">
                             <button
+                                type="button"
                                 onClick={() => requireProgressOrRun(() => onToggleBookmarked(q))}
-                                title="Toggle bookmark"
+                                title={progress?.bookmarked ? "Remove from favorites" : "Add to favorites"}
+                                aria-label={progress?.bookmarked ? "Remove from favorites" : "Add to favorites"}
+                                aria-pressed={Boolean(progress?.bookmarked)}
+                                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
+                                    progress?.bookmarked
+                                        ? "bg-yellow-400/10 text-yellow-300"
+                                        : "text-zinc-400 hover:bg-zinc-700 hover:text-yellow-300"
+                                }`}
                             >
-                                <Star className={`text-yellow-400 ${progress?.bookmarked ? "fill-yellow-400" : ""}`} />
+                                <Star className={`size-4 ${progress?.bookmarked ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                                <span className="sr-only sm:not-sr-only">
+                                    {progress?.bookmarked ? "Saved" : "Save"}
+                                </span>
                             </button>
                         </td>
                         <td className="px-4 py-3 text-center">

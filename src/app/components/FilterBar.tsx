@@ -74,8 +74,8 @@ const FilterBar = ({
         statusOptions.find((option) => option.value === selectedStatus)?.label ?? "Status";
 
     return (
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8 bg-zinc-950 border-y border-zinc-800">
-            <div className="flex flex-wrap items-center gap-2">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-3 sm:px-6 lg:px-8 bg-zinc-950/95 border-y border-zinc-800 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
                 {/* List Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -182,9 +182,9 @@ const FilterBar = ({
             </div>
 
             {/* Search */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 {/* Last Updated Info */}
-                <div className="text-green-400 font-bold text-xs mr-2 whitespace-nowrap">
+                <div className="text-green-400 font-bold text-xs sm:mr-2">
                     🧠 Problem Set – Updated on {lastUpdated ?? "Loading..."}
                 </div>
 
@@ -193,7 +193,7 @@ const FilterBar = ({
                     placeholder="Search questions"
                     value={searchTerm}
                     onChange={handleSearchChange}
-                    className="w-[240px] text-sm bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+                    className="w-full text-sm bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400 sm:w-[240px]"
                 />
             </div>
         </div>

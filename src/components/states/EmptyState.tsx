@@ -3,7 +3,10 @@ interface EmptyStateProps {
 }
 
 const EmptyState = ({ message }: EmptyStateProps) => (
-  <div className="rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-8 text-center text-sm text-zinc-400">
+  <div
+    role="status"
+    className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/70 px-4 py-8 text-center text-sm text-zinc-400"
+  >
     {message}
   </div>
 );

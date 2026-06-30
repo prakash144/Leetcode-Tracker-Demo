@@ -14,19 +14,14 @@ const geistMono = Geist_Mono({
 
 // Metadata with updated app name
 export const metadata: Metadata = {
-    title: "Leetcode Tracker", // App name
+    metadataBase: new URL("https://prakash144.github.io/Leetcode-Tracker-Demo"),
+    title: "Leetcode Tracker",
     description: "Track your Leetcode progress and problems",
     openGraph: {
         title: "Leetcode Tracker",
         description: "Track your Leetcode progress and problems",
-        images: [
-            {
-                url: "/path/to/your/og-image.png", // You can replace this with your app's image URL
-                width: 1200,
-                height: 630,
-                alt: "Leetcode Tracker",
-            },
-        ],
+        type: "website",
+        url: "/",
     },
 };
 

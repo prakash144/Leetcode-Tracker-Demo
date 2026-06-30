@@ -34,6 +34,7 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
     const [selectedCompany, setSelectedCompany] = useState<string>(defaultCompany);
     const [query, setQuery] = useState<string>("");
     const [userTyping, setUserTyping] = useState(false);
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
         setSelectedCompany(defaultCompany);
@@ -45,6 +46,7 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
         onCompanyChange(company);
         setQuery(company);
         setUserTyping(false); // Prevent dropdown from staying open
+        setOpen(false);
     };
 
     const clearSelection = () => {
@@ -55,19 +57,21 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
     };
 
     return (
-        <Dialog.Root>
+        <Dialog.Root open={open} onOpenChange={setOpen}>
             <Dialog.Trigger asChild>
                 <Button
                     variant="outline"
-                    className="text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md"
+                    className="max-w-[12rem] justify-between truncate text-sm text-zinc-300 hover:text-zinc-100 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 cursor-pointer transition-colors duration-150 rounded-md sm:max-w-xs"
+                    aria-label="Open company selector"
                 >
-                    {selectedCompany || "Select Company"} <ChevronDown size={16} />
+                    <span className="truncate">{selectedCompany || "Select Company"}</span>
+                    <ChevronDown size={16} />
                 </Button>
             </Dialog.Trigger>
 
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 max-w-md w-full bg-zinc-900 border border-zinc-700 text-white p-6 rounded-lg -translate-x-1/2 -translate-y-1/2 z-50">
+                <Dialog.Content className="fixed top-1/2 left-1/2 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-hidden bg-zinc-900 border border-zinc-700 text-white p-4 rounded-xl -translate-x-1/2 -translate-y-1/2 z-50 sm:p-6">
                     <Dialog.Title className="text-xl font-semibold mb-2">Select a Company</Dialog.Title>
 
                     {/* Search Box */}
@@ -86,9 +90,11 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
                                 <h3 className="text-sm text-zinc-400 font-medium mb-1">{category}</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {companyList.map((company) => (
-                                        <span
+                                        <button
+                                            type="button"
                                             key={company}
                                             onClick={() => handleCompanySelect(company)}
+                                            aria-pressed={selectedCompany === company}
                                             className={`px-3 py-1 text-xs rounded-full border cursor-pointer transition-colors duration-200 ${
                                                 selectedCompany === company
                                                     ? "bg-green-600 text-white border-green-500"
@@ -96,7 +102,7 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
                                             }`}
                                         >
                                             {company}
-                                        </span>
+                                        </button>
                                     ))}
                                 </div>
                             </div>

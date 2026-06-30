@@ -2,6 +2,7 @@
 
 import { useHeatmapData } from "@/hooks/useHeatmapData";
 import ErrorState from "@/components/states/ErrorState";
+import EmptyState from "@/components/states/EmptyState";
 
 interface HeatmapProps {
     uid?: string | null;
@@ -17,6 +18,7 @@ const getCellColor = (count: number) => {
 
 const Heatmap = ({ uid }: HeatmapProps) => {
     const { days, loading, error } = useHeatmapData(uid);
+    const hasActivity = days.some((day) => day.count > 0);
 
     return (
         <section className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 mb-4">
@@ -25,6 +27,12 @@ const Heatmap = ({ uid }: HeatmapProps) => {
                 {loading && <span className="text-xs text-zinc-500">Loading...</span>}
             </div>
             {error && <ErrorState message={error} />}
+            {!uid && (
+                <EmptyState message="Sign in to see your activity heatmap." />
+            )}
+            {uid && !loading && !error && !hasActivity && (
+                <EmptyState message="No activity yet. Solve or attempt a problem to start filling the heatmap." />
+            )}
             <div className="overflow-x-auto">
                 <div className="grid grid-flow-col grid-rows-7 gap-1 w-max">
                     {days.map((day) => (
@@ -35,6 +43,17 @@ const Heatmap = ({ uid }: HeatmapProps) => {
                         />
                     ))}
                 </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
+                <span>Less</span>
+                {[0, 1, 2, 4, 6].map((count) => (
+                    <span
+                        key={count}
+                        aria-label={`${count} activity level`}
+                        className={`h-3 w-3 rounded-sm ${getCellColor(count)}`}
+                    />
+                ))}
+                <span>More</span>
             </div>
         </section>
     );
