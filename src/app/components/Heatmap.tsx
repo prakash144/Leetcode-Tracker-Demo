@@ -168,22 +168,29 @@ const Heatmap = ({ uid }: HeatmapProps) => {
                 <>
                     <div className="overflow-x-auto scrollbar-thin-dark">
                         <div className="relative inline-flex flex-col">
-                            <div className="flex gap-0.5 ml-8 mb-1">
-                                {weeks.map((_, weekIdx) => {
-                                    const ml = monthLabels.find((m) => m.weekIndex === weekIdx);
-                                    return (
-                                        <div
-                                            key={weekIdx}
-                                            className="text-[10px] font-medium leading-none text-zinc-500 truncate"
-                                            style={{ width: "12px" }}
-                                        >
-                                            {ml ? ml.label : ""}
-                                        </div>
-                                    );
-                                })}
+                            <div className="flex mb-1">
+                                <div className="flex flex-col gap-0.5 mr-1.5">
+                                    {DAY_LABELS.map((_, i) => (
+                                        <div key={i} className="h-3" />
+                                    ))}
+                                </div>
+                                <div className="flex gap-0.5">
+                                    {weeks.map((_, weekIdx) => {
+                                        const ml = monthLabels.find((m) => m.weekIndex === weekIdx);
+                                        return (
+                                            <div
+                                                key={weekIdx}
+                                                className="text-[10px] font-medium leading-none text-zinc-500 truncate"
+                                                style={{ width: "12px" }}
+                                            >
+                                                {ml ? ml.label : ""}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                             <div className="flex">
-                                <div className="flex flex-col gap-0.5 mr-1.5 pt-0.5">
+                                <div className="flex flex-col gap-0.5 mr-1.5">
                                     {DAY_LABELS.map((label, i) => (
                                         <div
                                             key={i}
