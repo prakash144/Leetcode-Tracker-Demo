@@ -79,6 +79,7 @@ const CompanySearch = ({
         <div className="relative w-full">
             <Input
                 placeholder="Search company"
+                aria-label="Search companies"
                 className="text-sm bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
                 value={query}
                 onChange={(e) => {

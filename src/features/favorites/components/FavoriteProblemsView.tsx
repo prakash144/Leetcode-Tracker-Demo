@@ -57,6 +57,8 @@ const FavoriteProblemsView = ({ workspace }: FavoriteProblemsViewProps) => {
             type="button"
             className="mt-5 bg-yellow-400 text-black hover:bg-yellow-300"
             disabled={!auth.isConfigured || auth.loading}
+            title={!auth.isConfigured ? "Firebase Auth is not configured." : undefined}
+            aria-label={!auth.isConfigured ? "Firebase Auth is not configured. Sign in unavailable." : "Sign in with Google"}
             onClick={auth.login}
           >
             <LogIn className="size-4" />

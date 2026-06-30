@@ -149,7 +149,7 @@ const QuestionTable = ({
             {sortedProblems.length > 0 && (
             <>
             <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-zinc-300">
+            <table className="w-full text-sm text-left text-zinc-300" aria-label="Problems table">
                 <thead className="sticky top-0 z-10 text-xs uppercase bg-zinc-900 text-zinc-500 border-b border-zinc-700">
                 <tr>
                     <th className="px-4 py-3">#</th>
@@ -157,6 +157,7 @@ const QuestionTable = ({
                     <th
                         className="px-4 py-3 cursor-pointer"
                         onClick={() => handleSort("acceptanceRate")}
+                        aria-sort={sortBy === "acceptanceRate" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
                     >
                         Acceptance
                         {sortBy === "acceptanceRate" && (
@@ -169,6 +170,7 @@ const QuestionTable = ({
                     <th
                         className="px-4 py-3 cursor-pointer"
                         onClick={() => handleSort("frequency")}
+                        aria-sort={sortBy === "frequency" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
                     >
                         Frequency
                         {sortBy === "frequency" && (
@@ -219,6 +221,7 @@ const QuestionTable = ({
                             <input
                                 type="checkbox"
                                 title="Mark as solved"
+                                aria-label={progress?.solved ? "Mark as unsolved" : "Mark as solved"}
                                 checked={Boolean(progress?.solved)}
                                 onChange={() => requireProgressOrRun(() => onToggleSolved(q))}
                                 className="form-checkbox rounded-full bg-zinc-700 border-zinc-600 text-green-500 cursor-pointer"
@@ -228,6 +231,7 @@ const QuestionTable = ({
                             <input
                                 type="checkbox"
                                 title="Mark as attempted"
+                                aria-label={progress?.attempted ? "Remove attempt" : "Mark as attempted"}
                                 checked={Boolean(progress?.attempted)}
                                 onChange={() => requireProgressOrRun(() => onToggleAttempted(q))}
                                 className="form-checkbox rounded-full bg-zinc-700 border-zinc-600 text-blue-500 cursor-pointer"
@@ -256,6 +260,7 @@ const QuestionTable = ({
                             <button
                                 onClick={() => requireProgressOrRun(() => onToggleRevision(q))}
                                 title="Toggle revision"
+                                aria-label={progress?.inRevisionList ? "Remove from revision list" : "Add to revision list"}
                                 className={progress?.inRevisionList ? "text-cyan-400" : "text-zinc-400"}
                             >
                                 <RotateCcw size={18} />

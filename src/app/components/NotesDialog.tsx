@@ -63,6 +63,7 @@ const NotesDialog = ({
                             value={draft}
                             onChange={(event) => setDraft(event.target.value)}
                             maxLength={4000}
+                            aria-label="Notes"
                             className="w-full h-40 resize-none rounded-md border border-zinc-700 bg-zinc-800 p-3 text-sm text-white placeholder:text-zinc-400 focus:outline-none"
                             placeholder={`Notes for ${problem.title}`}
                         />

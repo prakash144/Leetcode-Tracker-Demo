@@ -185,12 +185,13 @@ const FilterBar = ({
             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 {/* Last Updated Info */}
                 <div className="text-green-400 font-bold text-xs sm:mr-2">
-                    🧠 Problem Set – Updated on {lastUpdated ?? "Loading..."}
+                    <span aria-hidden="true">🧠</span> Problem Set – Updated on {lastUpdated ?? "Loading..."}
                 </div>
 
                 {/* Search */}
                 <Input
                     placeholder="Search questions"
+                    aria-label="Search questions"
                     value={searchTerm}
                     onChange={handleSearchChange}
                     className="w-full text-sm bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400 sm:w-[240px]"

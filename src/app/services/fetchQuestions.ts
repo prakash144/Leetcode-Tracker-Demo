@@ -86,8 +86,8 @@ const useFetchQuestions = (url: string, context: FetchQuestionsContext) => {
                 setQuestions(formattedData);
                 setLoading(false);
             } catch (err) {
-                console.error("Error loading CSV data:", err); // Log the error
-                setError("Error loading CSV data");
+                console.error("Error loading CSV data:", err);
+                setError(err instanceof Error ? err.message : "Error loading CSV data");
                 setLoading(false);
             }
         };

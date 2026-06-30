@@ -37,11 +37,12 @@ const Heatmap = ({ uid }: HeatmapProps) => {
             {uid && !loading && (
             <>
             <div className="overflow-x-auto">
-                <div className="grid grid-flow-col grid-rows-7 gap-1 w-max">
+                <div className="grid grid-flow-col grid-rows-7 gap-1 w-max" role="grid" aria-label="Activity heatmap">
                     {days.map((day) => (
                         <div
                             key={day.date}
                             title={`${day.date}: ${day.count} activity`}
+                            aria-label={`${day.date}: ${day.count} activities`}
                             className={`h-3 w-3 rounded-sm ${getCellColor(day.count)}`}
                         />
                     ))}

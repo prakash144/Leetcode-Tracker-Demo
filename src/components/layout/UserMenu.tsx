@@ -41,6 +41,7 @@ const UserMenu = ({
         onClick={onLogin}
         className="border-zinc-700 bg-zinc-900 text-zinc-200 hover:bg-zinc-800 hover:text-white"
         title={!isConfigured ? "Firebase Auth is not configured." : "Sign in with Google"}
+        aria-label={!isConfigured ? "Firebase Auth is not configured. Sign in unavailable." : "Sign in with Google"}
       >
         <LogIn className="size-4" />
         {loading ? "Checking..." : "Sign in"}

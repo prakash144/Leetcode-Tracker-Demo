@@ -29,7 +29,7 @@ export const useAuth = () => {
       return unsubscribe;
     } catch (authError) {
       setError(
-        authError instanceof Error ? authError.message : "Unable to initialize auth."
+        authError instanceof Error ? authError.message : "Unable to initialize authentication. Check your Firebase configuration."
       );
       setLoading(false);
     }
