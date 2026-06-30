@@ -70,7 +70,7 @@ const TopNav = ({
                 Interview Tracly
               </div>
               <div className="hidden text-xs text-zinc-500 sm:block">
-                Master Coding Interviews
+                Master Technical Interviews
               </div>
             </div>
           </Link>
