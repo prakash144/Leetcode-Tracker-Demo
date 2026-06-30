@@ -76,7 +76,7 @@ const FavoriteProblemsView = ({ workspace }: FavoriteProblemsViewProps) => {
       {auth.error && <ErrorState message={auth.error} />}
       {progress.error && <ErrorState message={progress.error} />}
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
         <div className="text-sm font-semibold text-white">
           {favoriteProblems.length} bookmarked problem
           {favoriteProblems.length === 1 ? "" : "s"} in this dataset

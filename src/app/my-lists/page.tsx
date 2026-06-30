@@ -158,7 +158,7 @@ const MyListsPage = () => {
                 return (
                   <div
                     key={list.id}
-                    className="flex flex-col rounded-xl border border-zinc-800 bg-zinc-900/60 p-5"
+                    className="flex flex-col rounded-xl border border-zinc-800 bg-zinc-900/80 p-5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       {editingId === list.id ? (

@@ -37,7 +37,7 @@ const SettingsPage = () => {
 
       <div className="mx-auto max-w-3xl space-y-8 p-4 sm:px-6 lg:px-8 pb-12">
         {/* Appearance */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
           <h2 className="text-base font-semibold text-white mb-4">Appearance</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -81,7 +81,7 @@ const SettingsPage = () => {
         </section>
 
         {/* Coding Preferences */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
           <h2 className="text-base font-semibold text-white mb-4">Coding Preferences</h2>
           <div className="space-y-4 text-sm text-zinc-500">
             <p>Preferences will sync across devices once signed in. Configure your defaults below.</p>
@@ -107,7 +107,7 @@ const SettingsPage = () => {
         </section>
 
         {/* Dashboard */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
           <h2 className="text-base font-semibold text-white mb-4">Dashboard</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -145,7 +145,7 @@ const SettingsPage = () => {
         </section>
 
         {/* Account */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
           <h2 className="text-base font-semibold text-white mb-4">Account</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -210,7 +210,7 @@ const SettingsPage = () => {
         </section>
 
         {/* About */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
           <h2 className="text-base font-semibold text-white mb-4">About</h2>
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
