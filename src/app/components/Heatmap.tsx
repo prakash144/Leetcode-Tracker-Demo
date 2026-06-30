@@ -167,17 +167,20 @@ const Heatmap = ({ uid }: HeatmapProps) => {
             {uid && !loading && hasActivity && (
                 <>
                     <div className="overflow-x-auto scrollbar-thin-dark">
-                        <div className="relative inline-flex flex-col gap-0.5">
+                        <div className="relative inline-flex flex-col">
                             <div className="flex gap-0.5 ml-8 mb-1">
-                                {monthLabels.map((ml) => (
-                                    <div
-                                        key={ml.label + ml.weekIndex}
-                                        className="text-[10px] font-medium text-zinc-500 leading-none"
-                                        style={{ minWidth: `${ml.weekIndex === 0 ? 16 : 14}px` }}
-                                    >
-                                        {ml.label}
-                                    </div>
-                                ))}
+                                {weeks.map((_, weekIdx) => {
+                                    const ml = monthLabels.find((m) => m.weekIndex === weekIdx);
+                                    return (
+                                        <div
+                                            key={weekIdx}
+                                            className="text-[10px] font-medium leading-none text-zinc-500 truncate"
+                                            style={{ width: "12px" }}
+                                        >
+                                            {ml ? ml.label : ""}
+                                        </div>
+                                    );
+                                })}
                             </div>
                             <div className="flex">
                                 <div className="flex flex-col gap-0.5 mr-1.5 pt-0.5">
