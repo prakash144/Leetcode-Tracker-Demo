@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
 interface DonutSegment {
   name: string;
@@ -17,14 +17,14 @@ interface DonutChartProps {
   onSegmentClick?: (segment: DonutSegment) => void;
 }
 
-const DonutChart = ({
+const DonutChart = memo(function DonutChart({
   segments,
   size = 160,
   strokeWidth = 28,
   centerLabel,
   centerSubLabel,
   onSegmentClick,
-}: DonutChartProps) => {
+}: DonutChartProps) {
   const [animated, setAnimated] = useState(false);
 
   useEffect(() => {
@@ -125,6 +125,6 @@ const DonutChart = ({
       )}
     </svg>
   );
-};
+});
 
 export default DonutChart;

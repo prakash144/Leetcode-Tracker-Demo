@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useHeatmapData, type HeatmapDay } from "@/hooks/useHeatmapData";
 import ErrorState from "@/components/states/ErrorState";
 import EmptyState from "@/components/states/EmptyState";
@@ -120,7 +120,7 @@ interface HeatmapProps {
     uid?: string | null;
 }
 
-const Heatmap = ({ uid }: HeatmapProps) => {
+const Heatmap = memo(function Heatmap({ uid }: HeatmapProps) {
     const { days: rawDays, loading, error } = useHeatmapData(uid);
     const [timeRange, setTimeRange] = useState<TimeRange>("current");
     const [tooltip, setTooltip] = useState<{ date: string; count: number; x: number; y: number } | null>(null);
@@ -350,6 +350,6 @@ const Heatmap = ({ uid }: HeatmapProps) => {
             )}
         </section>
     );
-};
+});
 
 export default Heatmap;

@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 interface DifficultyBadgeProps {
   difficulty: string;
   size?: "sm" | "md";
@@ -15,7 +17,11 @@ const sizeMap: Record<string, string> = {
   md: "px-2 py-1 text-sm",
 };
 
-const DifficultyBadge = ({ difficulty, size = "sm", className = "" }: DifficultyBadgeProps) => {
+const DifficultyBadge = memo(function DifficultyBadge({
+  difficulty,
+  size = "sm",
+  className = "",
+}: DifficultyBadgeProps) {
   const color = colorMap[difficulty.toLowerCase()] ?? "text-zinc-400 bg-zinc-800 border-zinc-700";
 
   return (
@@ -25,6 +31,6 @@ const DifficultyBadge = ({ difficulty, size = "sm", className = "" }: Difficulty
       {difficulty}
     </span>
   );
-};
+});
 
 export default DifficultyBadge;
