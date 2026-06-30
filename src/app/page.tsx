@@ -1,142 +1,122 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import FilterBar from "./components/FilterBar";
-import QuestionTable from "./components/QuestionTable";
-import useFetchQuestions from "./services/fetchQuestions";
+import Link from "next/link";
+import { ArrowRight, BarChart3, Bookmark, ListChecks, RotateCcw } from "lucide-react";
 import Footer from "@/app/components/Footer";
+import DashboardStats from "@/app/components/DashboardStats";
+import Heatmap from "@/app/components/Heatmap";
 import AppShell from "@/components/layout/AppShell";
 import PageHeader from "@/components/layout/PageHeader";
-import { fetchLastUpdated } from "./services/fetchLastUpdated";
-import { useAuth } from "@/hooks/useAuth";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { useProblemProgress } from "@/hooks/useProblemProgress";
-import DashboardStats from "./components/DashboardStats";
-import Heatmap from "./components/Heatmap";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingState from "@/components/states/LoadingState";
-import { filterProblems } from "@/features/problems/hooks/useFilteredProblems";
-import { useProblemFilters } from "@/features/problems/hooks/useProblemFilters";
+import { Button } from "@/components/ui/button";
+import { useProblemWorkspaceData } from "@/features/problems/hooks/useProblemWorkspaceData";
 
-const Page = () => {
-    const [selectedCompany, setSelectedCompany] = useState("Google");
-    const [selectedList, setSelectedList] = useState("5. All.csv");
-    const {
-        difficulty,
-        hasActiveFilters,
-        resetFilters,
-        searchTerm,
-        selectedTopics,
-        setDifficulty,
-        setSearchTerm,
-        setSelectedTopics,
-        setStatusFilter,
-        statusFilter,
-    } = useProblemFilters();
-    const searchQuery = searchTerm;
-    const debouncedSearchQuery = useDebouncedValue(searchQuery, 500);
-    const {
-        user,
-        loading: authLoading,
-        error: authError,
-        isConfigured: isAuthConfigured,
-        login,
-        logout,
-    } = useAuth();
+const quickActions = [
+  {
+    title: "Open Problems",
+    description: "Search, filter, sort, and update progress from the dedicated workspace.",
+    href: "/problems",
+    icon: ListChecks,
+    enabled: true,
+  },
+  {
+    title: "Review Favorites",
+    description: "Favorites will become a dedicated view in the next phase.",
+    href: "/favorites",
+    icon: Bookmark,
+    enabled: false,
+  },
+  {
+    title: "View Analytics",
+    description: "Dedicated analytics are planned after the problems workspace split.",
+    href: "/analytics",
+    icon: BarChart3,
+    enabled: false,
+  },
+];
 
-    const csvUrl = `https://raw.githubusercontent.com/prakash144/leetcode-company-wise-problems/main/${selectedCompany}/${selectedList}`;
-    const { questions, loading, error } = useFetchQuestions(csvUrl, {
-        company: selectedCompany,
-        list: selectedList,
-    });
-    const {
-        progressMap,
-        loading: progressLoading,
-        error: progressError,
-        toggleSolved,
-        toggleAttempted,
-        toggleBookmarked,
-        toggleRevision,
-        saveNotes,
-    } = useProblemProgress(user?.uid);
-    const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+const DashboardPage = () => {
+  const { auth, progress, questionsState } = useProblemWorkspaceData();
 
-    // Fetch lastUpdated only ONCE (on first mount)
-    useEffect(() => {
-        const getLastUpdatedOnce = async () => {
-            const date = await fetchLastUpdated("Google", "5. All.csv"); // <- hardcoded default path
-            setLastUpdated(date);
-        };
-        getLastUpdatedOnce();
-    }, []); // <- empty dependency array ensures it runs only once
+  return (
+    <AppShell
+      user={auth.user}
+      authLoading={auth.loading}
+      isAuthConfigured={auth.isConfigured}
+      onLogin={auth.login}
+      onLogout={auth.logout}
+      footer={<Footer />}
+    >
+      <PageHeader
+        eyebrow="Dashboard"
+        title="Progress Overview"
+        description="Monitor your LeetCode progress and jump into the problem workspace when you are ready to practice."
+        actions={
+          <Button
+            asChild
+            className="bg-green-500 text-black hover:bg-green-400"
+          >
+            <Link href="/problems">
+              Open Problems
+              <ArrowRight className="size-4" />
+            </Link>
+          </Button>
+        }
+      />
 
-    // Filter questions based on the search query
-    const formattedQuestions = useMemo(() => {
-        return filterProblems(questions, { searchTerm: debouncedSearchQuery });
-    }, [questions, debouncedSearchQuery]);
+      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:px-6 lg:px-8">
+        {questionsState.loading && <LoadingState />}
+        {questionsState.error && <ErrorState message={questionsState.error} />}
+        {auth.error && <ErrorState message={auth.error} />}
+        {progress.error && <ErrorState message={progress.error} />}
 
-    return (
-        <AppShell
-            user={user}
-            authLoading={authLoading}
-            isAuthConfigured={isAuthConfigured}
-            onLogin={login}
-            onLogout={logout}
-            footer={<Footer />}
-        >
-            <PageHeader
-                eyebrow="Dashboard"
-                title="Problem Tracker"
-                description="Track company-wise LeetCode practice, review activity, and keep progress synced to your account."
-            />
+        <DashboardStats
+          questions={questionsState.questions}
+          progressMap={progress.progressMap}
+        />
 
-            {/* Delay FilterBar rendering until lastUpdated is ready to avoid hydration mismatch */}
-            {lastUpdated && (
-            <FilterBar
-                selectedCompany={selectedCompany}
-                onCompanySelect={setSelectedCompany}
-                onListSelect={setSelectedList}
-                selectedList={selectedList}
-                selectedDifficulty={difficulty}
-                onDifficultySelect={setDifficulty}
-                selectedTopic={selectedTopics}
-                onTopicSelect={setSelectedTopics}
-                selectedStatus={statusFilter}
-                onStatusSelect={setStatusFilter}
-                searchTerm={searchQuery}
-                onSearchChange={setSearchTerm}
-                onResetFilters={resetFilters}
-                hasActiveFilters={hasActiveFilters}
-                lastUpdated={lastUpdated}
-            />
-            )}
+        <Heatmap uid={auth.user?.uid} />
 
-            <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
-                {loading && <LoadingState />}
-                {error && <ErrorState message={error} />}
-                {authError && <ErrorState message={authError} />}
-                {progressError && <ErrorState message={progressError} />}
-                <DashboardStats questions={formattedQuestions} progressMap={progressMap} />
-                <Heatmap uid={user?.uid} />
-                <QuestionTable
-                    questions={questions}
-                    difficultyFilter={difficulty}
-                    selectedTopics={selectedTopics}
-                    searchTerm={debouncedSearchQuery}
-                    statusFilter={statusFilter}
-                    progressMap={progressMap}
-                    progressLoading={progressLoading}
-                    progressEnabled={Boolean(user)}
-                    onRequireAuth={login}
-                    onToggleSolved={toggleSolved}
-                    onToggleAttempted={toggleAttempted}
-                    onToggleBookmarked={toggleBookmarked}
-                    onToggleRevision={toggleRevision}
-                    onSaveNotes={saveNotes}
-                />
-            </div>
-        </AppShell>
-    );
+        <section className="grid gap-4 md:grid-cols-3">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            const content = (
+              <div className="flex h-full flex-col rounded-xl border border-zinc-800 bg-zinc-900 p-5 transition-colors hover:border-zinc-700">
+                <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-zinc-800 text-green-300">
+                  <Icon className="size-5" />
+                </div>
+                <h2 className="text-base font-semibold text-white">{action.title}</h2>
+                <p className="mt-2 flex-1 text-sm text-zinc-400">{action.description}</p>
+                <div className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-green-300">
+                  {action.enabled ? "Go to workspace" : "Coming later"}
+                  {action.enabled ? (
+                    <ArrowRight className="size-4" />
+                  ) : (
+                    <RotateCcw className="size-4" />
+                  )}
+                </div>
+              </div>
+            );
+
+            if (!action.enabled) {
+              return (
+                <div key={action.href} aria-disabled="true" className="opacity-70">
+                  {content}
+                </div>
+              );
+            }
+
+            return (
+              <Link key={action.href} href={action.href}>
+                {content}
+              </Link>
+            );
+          })}
+        </section>
+      </div>
+    </AppShell>
+  );
 };
 
-export default Page;
+export default DashboardPage;
