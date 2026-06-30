@@ -8,6 +8,7 @@ import {
 import { useProblemSorting } from "@/features/problems/hooks/useProblemSorting";
 import { usePagination } from "@/features/problems/hooks/usePagination";
 import ProblemPagination from "@/features/problems/components/ProblemPagination";
+import ProblemCardList from "@/features/problems/components/ProblemCardList";
 import NotesDialog from "./NotesDialog";
 
 interface QuestionTableProps {
@@ -125,11 +126,31 @@ const QuestionTable = ({
                 <EmptyState message="No questions match the current filters." />
             )}
 
-            {/* 🔽 Question Table */}
+            {/* 🔽 Mobile Problem Cards */}
+            <div className="block lg:hidden">
+                {sortedProblems.length > 0 && (
+                    <ProblemCardList
+                        problems={paginatedProblems}
+                        startIndex={range.from}
+                        progressMap={progressMap}
+                        progressEnabled={progressEnabled}
+                        onRequireAuth={onRequireAuth}
+                        onToggleSolved={onToggleSolved}
+                        onToggleAttempted={onToggleAttempted}
+                        onToggleBookmarked={onToggleBookmarked}
+                        onToggleRevision={onToggleRevision}
+                        onSaveNotes={onSaveNotes}
+                    />
+                )}
+            </div>
+
+            {/* 🔽 Desktop Question Table */}
+            <div className="hidden lg:block">
             {sortedProblems.length > 0 && (
             <>
+            <div className="overflow-x-auto">
             <table className="w-full text-sm text-left text-zinc-300">
-                <thead className="text-xs uppercase bg-zinc-900 text-zinc-500 border-b border-zinc-700">
+                <thead className="sticky top-0 z-10 text-xs uppercase bg-zinc-900 text-zinc-500 border-b border-zinc-700">
                 <tr>
                     <th className="px-4 py-3">#</th>
                     <th className="px-4 py-3">Title</th>
@@ -253,6 +274,10 @@ const QuestionTable = ({
                 )})}
                 </tbody>
             </table>
+            </div>
+            </>
+            )}
+            </div>
             <ProblemPagination
                 currentPage={currentPage}
                 pageSize={pageSize}
@@ -263,8 +288,6 @@ const QuestionTable = ({
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
             />
-            </>
-            )}
         </div>
     );
 };
