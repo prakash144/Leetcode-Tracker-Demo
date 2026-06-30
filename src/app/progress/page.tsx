@@ -7,8 +7,9 @@ import AppShell from "@/components/layout/AppShell";
 import PageHeader from "@/components/layout/PageHeader";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingState from "@/components/states/LoadingState";
+import CompanyLogo from "@/components/data-display/CompanyLogo";
 import DifficultyBadge from "@/components/data-display/DifficultyBadge";
-import DonutChart from "@/app/components/DonutChart";
+import { ProgressRingChart } from "@/app/components/ProgressRingChart";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useProblemWorkspaceData } from "@/features/problems/hooks/useProblemWorkspaceData";
@@ -262,10 +263,10 @@ const ProgressPage = () => {
       .slice(-6);
   }, [entries]);
 
-  const donutSegments = useMemo(() => {
+  const ringSegments = useMemo(() => {
     const colorMap: Record<string, string> = { Easy: "#22c55e", Medium: "#eab308", Hard: "#ef4444" };
     return stats.difficultyStats.map((d) => ({
-      name: d.name, value: d.solved, color: colorMap[d.name] || "#6366f1",
+      name: d.name, total: d.total, solved: d.solved, color: colorMap[d.name] || "#6366f1",
     }));
   }, [stats.difficultyStats]);
 
@@ -402,7 +403,14 @@ const ProgressPage = () => {
                             </a>
                           </td>
                           <td className="px-4 py-3"><DifficultyBadge difficulty={entry.problem.difficulty} /></td>
-                          <td className="px-4 py-3 text-xs text-zinc-500">{entry.problem.company || "—"}</td>
+                          <td className="px-4 py-3">
+                            {entry.problem.company ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <CompanyLogo company={entry.problem.company} size="sm" />
+                                <span className="text-xs text-zinc-500">{entry.problem.company}</span>
+                              </span>
+                            ) : (<span className="text-xs text-zinc-600">—</span>)}
+                          </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center gap-1 text-xs font-medium ${entry.progress.solved ? "text-green-400" : "text-yellow-400"}`}>
                               {entry.progress.solved ? <CheckCircle2 className="size-3.5" /> : <Circle className="size-3.5" />}
@@ -460,15 +468,15 @@ const ProgressPage = () => {
 
               <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Difficulty Breakdown</h3>
-                {donutSegments.some((s) => s.value > 0) ? (
+                {ringSegments.some((s) => s.solved > 0) ? (
                   <div className="flex flex-col items-center">
-                    <DonutChart segments={donutSegments} size={140} strokeWidth={24} centerLabel={`${acceptedCount}`} centerSubLabel="solved" />
+                    <ProgressRingChart segments={ringSegments} size={160} strokeWidth={22} />
                     <div className="flex flex-wrap justify-center gap-3 mt-3">
-                      {donutSegments.map((s) => (
+                      {ringSegments.map((s) => (
                         <div key={s.name} className="flex items-center gap-1.5 text-xs">
                           <span className="size-2.5 rounded-full" style={{ backgroundColor: s.color }} />
                           <span className="text-zinc-400">{s.name}</span>
-                          <span className="text-zinc-300 font-medium">{s.value}</span>
+                          <span className="text-zinc-300 font-medium">{s.solved}/{s.total}</span>
                         </div>
                       ))}
                     </div>
@@ -527,7 +535,7 @@ const ProgressPage = () => {
                     )}
                     {insights.topCompany && (
                       <div><div className="text-zinc-500 mb-1">Most Practiced Company</div>
-                        <div className="text-zinc-300">{insights.topCompany} ({insights.topCompanyCount} problem{insights.topCompanyCount !== 1 ? "s" : ""})</div>
+                        <div className="text-zinc-300 inline-flex items-center gap-1.5"><CompanyLogo company={insights.topCompany} size="sm" /> {insights.topCompany} ({insights.topCompanyCount} problem{insights.topCompanyCount !== 1 ? "s" : ""})</div>
                       </div>
                     )}
                     <div><div className="text-zinc-500 mb-1">Avg Attempts per Problem</div><div className="text-zinc-300">{insights.avgAttempts}</div></div>

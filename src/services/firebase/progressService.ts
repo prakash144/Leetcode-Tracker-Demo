@@ -1,12 +1,10 @@
 import {
   collection,
-  deleteDoc,
   doc,
   getDocs,
   increment,
   serverTimestamp,
   setDoc,
-  updateDoc,
 } from "firebase/firestore";
 import { requireDb } from "@/lib/firebase";
 import type { ProgressMap, UserProblemProgress } from "@/lib/progressTypes";
@@ -43,26 +41,6 @@ export const saveProblemProgress = async (
     },
     { merge: true }
   );
-};
-
-export const updateProblemNotes = async (
-  uid: string,
-  problemId: string,
-  notes: string
-) => {
-  await setDoc(
-    progressDoc(uid, problemId),
-    {
-      problemId,
-      notes,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
-};
-
-export const deleteProblemProgress = async (uid: string, problemId: string) => {
-  await deleteDoc(progressDoc(uid, problemId));
 };
 
 export const updateDailyActivity = async (
@@ -103,16 +81,5 @@ export const getUserActivity = async (uid: string): Promise<DailyActivity[]> => 
       solvedCount: typeof data.solvedCount === "number" ? data.solvedCount : 0,
       attemptedCount: typeof data.attemptedCount === "number" ? data.attemptedCount : 0,
     };
-  });
-};
-
-export const updateProgressFields = async (
-  uid: string,
-  problemId: string,
-  fields: Record<string, unknown>
-) => {
-  await updateDoc(progressDoc(uid, problemId), {
-    ...fields,
-    updatedAt: serverTimestamp(),
   });
 };

@@ -1,922 +1,284 @@
-1. Gap Analysis
+# Implementation Plan — Improvement Pass (v2)
 
-Current State
+> **How to read status markers:** ⬜ Not started · 🔶 In progress · ✅ Done.
+> Replace these as work actually lands — don't mark a phase ✅ until its own validation checklist passes for real. (The previous draft marked everything complete by default, which made it impossible to tell what was actually outstanding.)
 
-- Single-route Next.js static app at src/app/page.tsx.
-- Public problem metadata comes from GitHub CSV.
-- User progress is stored in Firebase Firestore.
-- Auth uses Firebase Google popup.
-- Main route owns most app state: company, list, difficulty, topics, search, debounced search, last updated, auth, progress.
-- UI includes filter bar, dashboard summary, heatmap, question table, notes dialog, and footer.
-- Existing reusable primitives are shadcn/Radix-style: Button, Input, DropdownMenu, Dialog, Avatar, Checkbox, ScrollArea.
+## Phase Dependency Order
 
-Missing Functionality
-
-- No dedicated Analytics/Statistics route.
-- No real app navigation/sidebar/top nav.
-- No pagination.
-- No explicit Favorites view/filter, despite bookmark data existing.
-- Bookmarks are only a star toggle, with no management surface.
-- No saved filter state, URL query state, or sharable views.
-- No table density controls, column controls, or robust sort model.
-- No structured loading/empty/error components.
-- No reusable dashboard cards or page shell.
-- No test coverage.
-- No responsive table strategy.
-- No centralized design tokens beyond mostly default shadcn variables.
-- No realtime Firestore sync.
-- No explicit accessibility audit or keyboard-first workflows.
-
-UX Issues
-
-- Primary controls can disappear until lastUpdated resolves.
-- Login is hidden inside avatar menu.
-- Logged-out dashboard and heatmap show empty progress without enough context.
-- Table likely overflows on mobile.
-- Topic selector trigger can become too wide with many selected topics.
-- Company selector can offer static companies that may not map to available CSV data.
-- Company selector does not close after selection.
-- “Dashboard” menu item is inert.
-- Error messages are generic.
-- Loading states are plain text and inconsistent.
-- Heatmap has no legend or clear signed-out state.
-- Footer feels more personal-site oriented than app oriented.
-
-Technical Limitations
-
-- page.tsx is overloaded.
-- Filtering occurs in both page.tsx and QuestionTable.
-- lastUpdated is hardcoded to Google / 5. All.csv.
-- next.config.ts base path appears inconsistent with README deployment URL.
-- Firestore progress is loaded once with getDocs, not subscribed.
-- Optimistic updates may race because updates close over progressMap.
-- Activity aggregation only increments and does not decrement on undo.
-- fetchCompanyList lacks response.ok handling.
-- Some local UI primitives are unused while raw Radix/native inputs are used.
-- Analytics are derived only from currently loaded/filtered company/list data, not necessarily the user’s complete progress history.
-
-———
-
-2. Architecture
-
-Components To Add
-
-- AppShell: shared layout for authenticated-style app chrome.
-- TopNav or SidebarNav: navigation between Dashboard, Problems, Analytics, Favorites.
-- PageHeader: title, subtitle, actions, metadata.
-- MetricCard: reusable stat card.
-- ProgressRing or ProgressBarCard: reusable progress visualization.
-- ProblemFilters: extracted filter controls from FilterBar.
-- ProblemToolbar: search, sort, filter summary, reset filters, pagination size.
-- ProblemTablePagination: pagination controls.
-- ProblemCardList: mobile-friendly problem list alternative.
-- EmptyState: reusable empty/signed-out/no-results states.
-- ErrorState: reusable recoverable error UI.
-- LoadingSkeleton: dashboard/table/card skeletons.
-- FavoriteProblemsView: favorites/bookmarks-focused view.
-- AnalyticsOverview: high-level analytics layout.
-- DifficultyBreakdown, TopicBreakdown, ActivityPanel, ProgressTrendPanel.
-- StatusBadge, DifficultyBadge, TopicBadge.
-- AuthButton / UserMenu: clearer auth entry and account menu.
-- FilterChips: active filter summary with remove actions.
-
-Components To Refactor
-
-- src/app/page.tsx
-    - Reduce to route composition.
-    - Move problem state/data orchestration into hooks or feature components.
-
-- FilterBar
-    - Split into navigation/auth/header responsibilities and problem filters.
-
-- QuestionTable
-    - Split filtering/sorting/pagination from rendering.
-    - Reuse Checkbox, Button, badges, empty/loading states.
-
-- DashboardStats
-    - Convert internal StatPill and ProgressList into reusable components.
-
-- Heatmap
-    - Add signed-out, empty, loading, error, and legend states.
-
-- CompanySelector
-    - Align static/dynamic source strategy.
-    - Improve close behavior and trigger text.
-
-- TopicSelector
-    - Replace clickable spans with accessible buttons or checkbox items.
-
-- NotesDialog
-    - Use shared Dialog wrapper and add save/error/loading feedback.
-
-Routing Changes
-
-- Keep / behavior as the current main dashboard/problems surface initially.
-- Add:
-    - /analytics for dedicated statistics.
-    - /favorites for bookmarked/favorite problems.
-
-- Optional later:
-    - /problems if the root dashboard becomes more summary-focused.
-
-- Use App Router pages:
-    - src/app/page.tsx
-    - src/app/analytics/page.tsx
-    - src/app/favorites/page.tsx
-
-State/Data Model Changes
-
-- Keep existing Firestore progress schema initially:
-    - solved
-    - attempted
-    - bookmarked
-    - inRevisionList
-    - notes
-    - timestamps
-
-- Treat “Favorites” as the current bookmarked field to preserve behavior.
-- Consider UI naming:
-    - “Favorites” page powered by bookmarked.
-    - “Bookmarks” as row-level saved marker, unless product language is unified.
-
-- Add client-side state abstractions:
-    - useProblemFilters
-    - useProblemSorting
-    - usePagination
-    - useFilteredProblems
-    - useProblemDataset
-
-- Optional future model additions:
-    - favoriteRank
-    - favoriteTags
-    - lastReviewedAt
-    - confidence
-    - customLists
-
-Shared Abstractions
-
-- ProblemQueryState: search, difficulty, topics, company, list, status, favorites-only, sort, page, page size.
-- ProblemStatus: solved, attempted, unsolved, bookmarked, revision.
-- ProblemSort: field plus direction.
-- useProblemCollection: one place for CSV fetch, formatting, filtering, sorting, pagination.
-- useProgressActions: wraps progress mutations and auth guard.
-- useAnalyticsStats: derived stats for analytics/dashboard.
-- useUrlState later if filters should sync to query params.
-
-Suggested Folder Structure
-
-src/
-app/
-page.tsx
-analytics/page.tsx
-favorites/page.tsx
-layout.tsx
-globals.css
-components/
-ui/
-layout/
-AppShell.tsx
-TopNav.tsx
-PageHeader.tsx
-states/
-EmptyState.tsx
-ErrorState.tsx
-LoadingSkeleton.tsx
-data-display/
-MetricCard.tsx
-StatusBadge.tsx
-DifficultyBadge.tsx
-TopicBadge.tsx
-features/
-problems/
-components/
-ProblemToolbar.tsx
-ProblemFilters.tsx
-ProblemTable.tsx
-ProblemCardList.tsx
-ProblemPagination.tsx
-NotesDialog.tsx
-hooks/
-useProblemFilters.ts
-useProblemSorting.ts
-usePagination.ts
-useFilteredProblems.ts
-dashboard/
-components/
-DashboardStats.tsx
-ActivityHeatmap.tsx
-analytics/
-components/
-AnalyticsOverview.tsx
-DifficultyBreakdown.tsx
-TopicBreakdown.tsx
-favorites/
-components/
-FavoriteProblemsView.tsx
-hooks/
-lib/
-services/
-
-This can be introduced incrementally. Existing paths do not need to be moved in phase one.
-
-———
-
-3. Execution Plan
-
-Phase 1: Stabilize Foundations Without Behavior Change
-
-Objective:
-Create a clean foundation for premium UI work while preserving the current app behavior.
-
-Scope:
-
-- Extract reusable state helpers.
-- Add shared state components.
-- Keep current route and UI visually close to existing behavior.
-- Fix obvious non-behavior-breaking issues.
-
-Files/components affected:
-
-- src/app/page.tsx
-- src/app/components/QuestionTable.tsx
-- src/app/components/FilterBar.tsx
-- src/app/components/Heatmap.tsx
-- src/components/ui/*
-- New src/components/states/*
-- New src/features/problems/hooks/*
-
-Dependencies:
-
-- Existing hooks and Firebase services.
-- Existing shadcn/Radix primitives.
-
-Risks:
-
-- Refactoring filtering can accidentally change visible problem counts.
-- Moving logic from table/page can alter sort/filter behavior.
-
-Acceptance criteria:
-
-- / renders the same core functionality.
-- Search, company, list, difficulty, topic filters still work.
-- Progress toggles, notes, bookmarks, revision toggle still work.
-- Logged-out auth guard still triggers login.
-- No schema changes.
-
-Validation checklist:
-
-- Run build.
-- Run lint or equivalent.
-- Manually verify default Google / All CSV load.
-- Verify all current filters.
-- Verify progress mutation when signed in.
-- Verify signed-out progress action prompts login.
-- Verify no console errors from refactor.
-
-———
-
-Phase 2: Premium App Shell And Navigation
-
-Objective:
-Introduce production-quality app navigation and layout while keeping the root dashboard usable.
-
-Scope:
-
-- Add AppShell.
-- Add top navigation or sidebar navigation.
-- Add clearer auth/user menu.
-- Add page header.
-- Move footer out of the primary productivity viewport or simplify it.
-
-Files/components affected:
-
-- src/app/layout.tsx
-- src/app/page.tsx
-- src/app/components/FilterBar.tsx
-- New src/components/layout/AppShell.tsx
-- New src/components/layout/TopNav.tsx
-- New src/components/layout/PageHeader.tsx
-- Optional src/components/layout/UserMenu.tsx
-
-Dependencies:
-
-- useAuth
-- Avatar, DropdownMenu, Button
-
-Risks:
-
-- Static export base path issues with navigation links.
-- Login visibility changes could alter expected flow.
-
-Acceptance criteria:
-
-- Users can navigate to Dashboard, Analytics, Favorites once routes exist.
-- Auth state is visible and understandable.
-- Existing filter functionality remains available on the dashboard/problems page.
-- Layout is responsive at mobile/tablet/desktop widths.
-
-Validation checklist:
-
-- Check desktop width around 1440px.
-- Check tablet width around 768px.
-- Check mobile width around 375px.
-- Keyboard tab through navigation and auth menu.
-- Confirm no hydration warnings.
-
-———
-
-Phase 3: Search, Filter, Sort, And Pagination Upgrade
-
-Objective:
-Make the problem list production-grade with pagination, clearer filters, and better sorting.
-
-Scope:
-
-- Add pagination state and controls.
-- Centralize filtering/sorting/pagination.
-- Add status filters: all, solved, attempted, unsolved, favorites/bookmarked, revision.
-- Add reset filters.
-- Add page-size selector.
-- Improve empty state for no results.
-
-Files/components affected:
-
-- QuestionTable
-- FilterBar or new ProblemToolbar
-- New ProblemPagination
-- New useProblemFilters
-- New useProblemSorting
-- New usePagination
-- New useFilteredProblems
-
-Dependencies:
-
-- Existing Problem type.
-- Existing ProgressMap.
-
-Risks:
-
-- Counts may become confusing if they refer to paginated vs filtered totals.
-- Existing double filtering must be removed carefully.
-- Search debounce behavior should remain similar.
-
-Acceptance criteria:
-
-- Pagination works with configurable page size.
-- Filters apply before pagination.
-- Sorting applies before pagination.
-- Counts distinguish total dataset, filtered result count, and page range.
-- Empty state appears for no matching problems.
-- Existing search/filter/sort behavior is preserved or improved intentionally.
-
-Validation checklist:
-
-- Search for a known title.
-- Filter by difficulty.
-- Filter by topic.
-- Sort by acceptance and frequency.
-- Move between pages.
-- Change page size.
-- Clear all filters.
-- Verify progress toggles on paginated rows.
-
-———
-
-# Phase 4 – Separate Dashboard & Problems Workspace
-
-## Objective
-
-Improve the application structure by separating the Dashboard from the Problems experience. The Dashboard should become an analytics and overview page, while a dedicated Problems page becomes the primary workspace for browsing and solving coding problems.
-
----
-
-## Goals
-
-* Create a dedicated **Problems** page.
-* Keep the **Dashboard** focused on progress and insights.
-* Improve navigation and scalability.
-* Prepare the application for future features like custom lists, advanced filtering, and problem collections.
-
----
-
-## Features
-
-### 1. Dedicated Problems Page
-
-Create a new route:
+Work in this order — later phases assume earlier ones exist:
 
 ```
-/problems
-```
-
-Move the following from the Dashboard:
-
-* Complete problems table/list
-* Search
-* Difficulty filter
-* Topic filter
-* Status filter
-* Sorting
-* Pagination
-* Problem actions
-* Favorite/Bookmark toggle
-
-This page becomes the primary workspace for solving problems.
-
----
-
-### 2. Dashboard Simplification
-
-Refactor the Dashboard into a high-level overview.
-
-Keep only:
-
-* Progress summary
-* Solved problems statistics
-* Difficulty breakdown
-* Topic distribution
-* Recent activity
-* Daily streak
-* Heatmap
-* Quick links
-* Resume last solved problem
-
-Remove:
-
-* Large problems table
-* Search
-* Filters
-* Pagination
-
-The Dashboard should provide insights instead of content management.
-
----
-
-### 3. Navigation Update
-
-Update the primary navigation:
-
-```
-Dashboard
-Problems
-Analytics
-Favorites
-Settings
-```
-
-Users should be able to switch between overview and problem-solving workflows without excessive scrolling.
-
----
-
-### 4. Shared Problem Components
-
-Extract reusable components for the Problems workspace.
-
-Suggested structure:
-
-```
-components/problems/
-├── ProblemTable.tsx
-├── ProblemCard.tsx
-├── ProblemFilters.tsx
-├── SearchBar.tsx
-├── SortDropdown.tsx
-├── StatusBadge.tsx
-├── DifficultyBadge.tsx
-└── Pagination.tsx
-```
-
-This avoids duplication and keeps the codebase modular.
-
----
-
-### 5. Routing Changes
-
-```
-src/app/page.tsx              // Dashboard
-src/app/problems/page.tsx     // Problems List
-src/app/analytics/page.tsx
-src/app/favorites/page.tsx
-src/app/settings/page.tsx
+1. Heatmap Redesign
+        │
+        ▼
+2. Progress Page  ──────┐
+        │                │
+        ▼                ▼
+3. Dashboard  (reuses Heatmap + links into Progress)
+        │
+        ▼
+4. Global Optimization & Polish  (touches everything above)
+        │
+        ▼
+5. Navigation Update  (route rename only — can land any time after Progress exists)
+        │
+        ▼
+6. Final Visual Consistency Pass  (last — needs all pages stable)
 ```
 
 ---
 
-### 6. Dashboard Quick Actions
+## 1. Heatmap Redesign — ✅
 
-Provide shortcuts instead of embedding the full problem list.
+Match LeetCode's contribution heatmap while preserving the existing Firestore activity model.
 
-Examples:
+**Layout**
+- GitHub/LeetCode-style grid: 7 rows (Mon–Sun), week-based columns
+- Desktop: full layout. Mobile: horizontally scrollable container, no overlap
+- Month labels above week columns, aligned to each month's first cell; abbreviate ("Jan" → "J") or hide before allowing overlap
 
-* Continue Solving
-* Random Problem
-* View All Problems
-* View Favorites
-* Recently Solved
+**Header summary** (above the grid)
+```
+163 submissions in the past one year
+Total active days: 45    Max streak: 14    [Current ▼]
+```
+
+**Cells** — five intensity levels, single-hue green scale:
+
+| Level | Condition |
+|---|---|
+| None | 0 submissions |
+| Low | 1 |
+| Medium | 2–3 |
+| High | 4–6 |
+| Very High | 7+ |
+
+**Tooltip**: `5 submissions on Jun 24, 2026` / `No submissions on Jun 24, 2026`
+
+**Legend**: `Less  █ █ █ █ █  More`
+
+**Time-range filter**: Current (past 1 yr, default), 2025, 2024, 2023, Last 180 Days, Last 90 Days, Last 30 Days. Changing it must update: cells, total submissions, active days, current streak, max streak — together, not independently (avoid a filter that updates the grid but leaves stale stats).
+
+**States**: Loading (skeleton grid, 7×~53), Empty ("No activity data yet" + CTA), Signed out (sign-in prompt), Error (message + retry).
+
+**Responsiveness**: ≥1024px full labels · 768–1023px abbreviated/reduced spacing · <768px horizontal scroll, no overlap. Test at 1440 / 1024 / 768 / 375.
+
+**Performance**: `useMemo` for activity aggregation, streak derivation, color mapping. Memoize cell colors. Virtualize off-screen weeks only if the dataset size actually requires it — don't add virtualization speculatively if 53 weeks renders fine.
+
+**Validation**: build / lint / typecheck pass · labels never overlap at any breakpoint · filter updates all four stats atomically · legend matches cell colors · all four states render correctly.
 
 ---
 
-## Expected Outcome
+## 2. Progress Page (replaces Analytics) — ✅
 
-After Phase 4:
+Two-column workspace: Practice History (primary) + Summary (sidebar).
 
-* Dashboard becomes a clean analytics and progress overview.
-* Problems page becomes the dedicated workspace for discovering and solving problems.
-* Navigation is more intuitive.
-* The architecture is easier to extend with future features such as custom collections, company-wise problem lists, playlists, and advanced filtering.
+```
+┌─────────────────────────────────┬──────────────────┐
+│  Practice History (Primary)     │ Summary (Sidebar)│
+│  Filters / Search / Sort        │ Overall Stats     │
+│  Paginated Table                │ Charts            │
+│                                  │ Recent Stats      │
+│                                  │ Insights          │
+└─────────────────────────────────┴──────────────────┘
+```
+Desktop: side-by-side. Tablet/mobile: stacked, sidebar below.
 
+**Practice History table**
+
+| Column | Content |
+|---|---|
+| Last Submitted | Relative time ("2 hours ago", "Yesterday", "Jun 21") |
+| Problem | Title, clickable |
+| Difficulty | Badge (Easy/Medium/Hard) |
+| Company | Tag(s) |
+| Last Result | Accepted / Attempted, status color |
+| Total Submissions | Count |
+
+Sortable: Last Submitted, Title, Difficulty, Total Submissions.
+
+**Filters** (independently toggleable, composable, backed by one shared query-state object so new filters don't require redesign): Search (debounced), Difficulty, Company (multi-select), Topic (multi-select), Status, Frequency, Custom List, Date range (preset or picker). Every filter combination needs to be resettable to a known empty state — add a single "Clear all filters" action rather than requiring per-filter clearing.
+
+**Pagination**: page size 10/25/50, "Page X of Y," "Showing 1–25 of 142 problems," sticky header.
+
+**Sidebar**
+- Overall Progress: Total Solved / Attempted / Submissions, Acceptance Rate, per-difficulty breakdown (count + %)
+- Charts: Difficulty Breakdown (donut), Monthly Submission Trend, Company-wise Progress, Topic-wise Progress, Pattern Distribution, Most Practiced Topics — lazy-loaded (dynamic import), lightweight library (recharts or custom SVG)
+- Recent Stats: solved this week/month, current streak, max streak, avg daily submissions, avg problems/week
+- Insights: strongest/weakest topics by acceptance rate, most-practiced company/pattern, avg attempts per problem, acceptance trend (increasing/decreasing/stable) — state the minimum sample size before showing a trend (e.g., don't claim "increasing" off 2 data points)
+
+**UX**: compact table typography, sticky header, horizontal scroll on mobile / stacked on small screens, skeleton loading, empty state ("Start solving problems to see your progress"), error + retry, row hover, full keyboard access through filters → table → pagination.
+
+**Performance**: memoize derived stats and filtered/sorted list; debounce search; stable row keys instead of re-rendering the whole table on filter change; dynamic-import charts.
+
+**Validation**: build/lint/typecheck pass · filters narrow correctly and compose · sorting works · pagination respects active filters · sidebar stats match table data for the same filter state · charts render correctly · all states correct · responsive at 1440/1024/768/375.
 
 ---
 
-Phase 5: Favorites And Improved Bookmarks
+## 3. Dashboard — ✅
 
-Objective:
-Turn the existing bookmark field into a first-class Favorites experience.
+Answers "how am I progressing today?" — a snapshot, not a duplicate of Progress.
 
-Scope:
+```
+┌────────────────────────────────────────────────────────┐
+│  Profile Summary            Overall Progress / Stats   │
+├────────────────────────────────────────────────────────┤
+│  Activity Heatmap (reused from Phase 1, unmodified)     │
+├────────────────────────────────────────────────────────┤
+│  Continue Solving  │  Recent Activity  │  Weekly Goal   │
+├────────────────────────────────────────────────────────┤
+│  Difficulty Breakdown         Company Progress          │
+└────────────────────────────────────────────────────────┘
+```
 
-- Add /favorites route.
-- Show bookmarked problems from currently loaded dataset.
-- Add favorites-only filter on main problem table.
-- Improve bookmark affordance with label, tooltip, and active state.
-- Add empty states for no favorites and signed-out users.
+- **Profile Summary**: avatar (Google auth), name, current streak (flame icon), total solved, weekly goal with completion %
+- **Overall Progress**: same four headline stats as Progress sidebar, plus an animated donut/radial chart (Easy green / Medium yellow / Hard red), count+% centered, each segment clickable → `/progress?difficulty=easy`
+- **Difficulty Breakdown cards**: solved/total, %, progress bar per difficulty; clicking a card → `/progress?difficulty=...`
+- **Activity Heatmap**: the Phase 1 component, unmodified, with its own time-range filter; clicking it → `/progress`
+- **Continue Solving**: last solved + last attempted problem, "Resume" button; empty state if no history
+- **Recent Activity**: latest 3–5 solved problems, "View Full History" → `/progress`
+- **Quick Actions**: Continue Solving, Random Problem, Favorites, My Lists, Progress
+- **Company Progress**: top 5 companies practiced, solved count + completion % bar each, click → `/problems?company=...`
 
-Files/components affected:
+**Explicit non-goal**: no table, no filters, no pagination on this page — that's what Progress is for. If a future request asks to "just add a quick filter to the dashboard," that's scope creep back into Progress's job and should be pushed back on.
 
-- New src/app/favorites/page.tsx
-- New FavoriteProblemsView
-- QuestionTable
-- useFilteredProblems
-- DashboardStats
-- shared badges/actions
+**Performance**: each section independently memoized and independently skeleton-loaded (one section's error shouldn't block the rest); donut chart dynamic-imported; flat component hierarchy.
 
-Dependencies:
+**Validation**: build/lint/typecheck pass · donut chart animates and segments are clickable and route correctly · difficulty cards route correctly · heatmap is the exact Phase 1 component (no forked copy) · profile data matches auth session · recent activity matches latest submissions · all states correct.
 
-- Existing bookmarked field.
-- Existing Firebase progress loading.
+---
 
-Risks:
+## 4. Global Optimization & Polish — ✅
 
-- Firestore stores progress by problem ID only; displaying favorite metadata requires matching current CSV dataset.
-- Favorites across all companies/lists are not fully possible unless all metadata is loaded or progress docs store metadata snapshots.
+Applies across all pages above. Do this *after* 1–3 exist, since it's a cross-cutting pass, not new feature work.
 
-Acceptance criteria:
+**Load performance**: dynamic imports for charts/heatmap/dialogs · route-based code splitting (App Router) · bundle audit via `next build --analyze` · minimize client component boundaries · fixed-aspect-ratio skeletons to avoid CLS · preload critical CSS.
 
-- Bookmark toggle remains backward compatible.
-- Favorites page shows bookmarked problems available in the current dataset.
-- Main list can filter to favorites.
-- Signed-out users see a clear sign-in prompt.
-- Empty favorites state explains how to add favorites.
+**Runtime performance**: memoize parsed CSV (parse once) · `onSnapshot` vs `getDocs` chosen deliberately per read pattern, not by default · single-pass memoized filter pipeline · 300ms debounce on search · memoized sort · pagination computed from memoized filtered list · `React.memo` on table rows, stat cards, chart components, heatmap cells · `useCallback` on handlers passed as props.
 
-Validation checklist:
+**UI consistency**: one font scale, one spacing scale, consistent line-height. Every data-driven component handles all four states (loading/empty/error/signed-out) using a **shared** set of state components rather than each page reinventing its own skeleton/empty/error markup — this is the actual mechanism for "consistency," not just a style guideline.
 
-- Sign in, bookmark a problem, verify it appears in Favorites.
-- Unbookmark, verify it disappears.
-- Verify existing star state in main table.
-- Verify no-favorites state.
-- Verify signed-out state.
+**Empty states**: icon (SVG, not emoji) + title + one-line explanation + action button, every time.
 
-———
+**Per-page focus**:
 
-Phase 6: Dedicated Analytics/Statistics Page
+| Page      | Focus                                                    |
+|-----------|----------------------------------------------------------|
+| Dashboard | High-level overview only — no table/filters              |
+| Problems  | Full workspace: table, filters, search, sort, pagination |
+| Progress  | History + stats sidebar (replaces old Analytics route)   |
+| Favorites | Bookmarked list + empty state                            |
+| My Lists  | Create/rename/delete/view custom lists                   |
+| Settings  | Theme, preferences, account, about                       |
 
-Objective:
-Add a dedicated analytics surface using existing progress and problem metadata.
+**Responsiveness targets**: ≥1440px (max-width container) · 1024px · 768px (stacked) · 375px (single column) · 320px minimum supported. No unintentional horizontal scroll (heatmap and wide tables are the only allowed exceptions).
 
-Scope:
+**Accessibility**: full keyboard reachability · visible focus rings · `aria-label` on icon-only buttons · WCAG AA contrast (4.5:1 normal text, 3:1 large text/UI components — state the actual numbers, don't just say "meets AA") · semantic HTML and correct heading hierarchy · `prefers-reduced-motion` respected.
 
-- Add /analytics.
-- Show progress by difficulty, topic, company/list, status.
-- Show activity heatmap with legend and better empty/loading states.
-- Add summary cards and progress visuals.
-- Reuse useDashboardStats initially; add useAnalyticsStats only if needed.
+**Code quality**: remove dead code/unused imports · de-duplicate filter/sort logic into shared hooks · no `any` in core data models.
 
-Files/components affected:
+**Validation** (this phase's checklist *is* the master checklist — see §7, don't re-derive it per page): build/lint/typecheck pass · no console errors dev or prod · no layout shift on load · all interactive elements have focus states · responsive at all targets · Lighthouse Performance ≥ 90, Accessibility ≥ 90.
 
-- New src/app/analytics/page.tsx
-- New AnalyticsOverview
-- New DifficultyBreakdown
-- New TopicBreakdown
-- Refactor/reuse DashboardStats
-- Refactor/reuse Heatmap
+---
 
-Dependencies:
+## 5. Navigation Update — ✅
 
-- Current loaded problem metadata.
-- progressMap.
-- getUserActivity.
+| Before | After |
+|---|---|
+| Analytics | **Progress** (renamed) |
+| everything else | unchanged |
 
-Risks:
+### Route Map
 
-- Analytics may be scoped to current dataset, not global lifetime progress.
-- User may expect cross-company analytics; that requires loading more metadata than currently done.
+| Route | Page |
+|---|---|
+| `/` | Dashboard |
+| `/problems` | Problems |
+| `/progress` | Progress (was Analytics) |
+| `/favorites` | Favorites |
+| `/my-lists` | My Lists |
+| `/settings` | Settings |
 
-Acceptance criteria:
+Profile dropdown: My Profile · My Lists · Settings · Theme · Sign Out.
 
-- Analytics page renders dedicated stats.
-- Stats match dashboard totals for the same dataset.
-- Heatmap has loading, empty, signed-out, and error states.
-- No Firestore schema change required.
+**Note**: add a redirect from the old `/analytics` route to `/progress` so existing bookmarks/links don't 404.
 
-Validation checklist:
+---
 
-- Compare dashboard solved/attempted counts to analytics.
-- Verify signed-out analytics state.
-- Verify signed-in activity state.
-- Verify no crash when progress is empty.
-- Verify route works under static export.
+## 6. Final Visual Consistency Pass — ⬜
 
-———
+Last phase. No new features — only consistency of what 1–5 already built. Target feel: LeetCode / GitHub / Linear / Vercel / Raycast — polished, not flashy.
 
-Phase 7: Responsive Design Pass
+### 6.1 Difficulty Color System (single decision, applied everywhere)
 
-Objective:
-Make the app feel polished and usable across desktop, tablet, and mobile.
+- Easy → green · Medium → yellow/amber · Hard → red
 
-Scope:
+Apply identically across: difficulty badges, progress bars, donut/pie charts, stat cards, table rows, legends, filters, tooltips — anywhere difficulty appears. Define these three colors **once** as design tokens (e.g., Tailwind theme values or CSS variables) and reference the tokens everywhere, rather than re-specifying hex values per component — that's what actually prevents drift.
 
-- Add mobile problem cards or responsive table fallback.
-- Make filter toolbar wrap predictably.
-- Prevent topic/company trigger overflow.
-- Add sticky table header only if it does not harm mobile UX.
-- Improve spacing, typography, hierarchy.
+### 6.2 Company Logos — Decision
 
-Files/components affected:
+Resolve this before building rather than leaving it open at ship time:
 
-- AppShell
-- ProblemToolbar
-- QuestionTable
-- New ProblemCardList
-- TopicSelector
-- CompanySelector
-- DashboardStats
-- AnalyticsOverview
+- **Recommended default: don't use real company logos.** Logos are trademarked assets; bundling or hotlinking them creates licensing exposure and a maintenance burden (logos change, need fallbacks, vary in aspect ratio/background requirements).
+- **Use instead**: a small colored initials badge (e.g., first 1–2 letters, deterministic color per company name) at 16–20px, consistent across Problems/Progress/Dashboard/filters. This needs zero new dependencies and no licensing risk.
+- If the team decides real logos are worth the risk later, scope it as its own follow-up phase with an explicit license review — don't fold it into a "polish pass."
 
-Dependencies:
+### 6.3 Chart Review
 
-- Completed component split.
+For every chart (donut, pie, progress rings, difficulty charts, heatmap, progress bars): difficulty colors per §6.1, consistent legend placement/style, consistent label typography, consistent hover interaction pattern, fast/subtle animation (respecting reduced-motion).
 
-Risks:
+### 6.4 Component Review
 
-- Maintaining both table and card views can duplicate row logic.
-- Mobile controls can become too hidden if over-compressed.
+Navbar, sidebar, cards, tables, buttons, inputs, dropdowns, dialogs, tooltips, heatmap, filters, search, pagination, skeletons, empty states — pass over each for shared spacing/radius/shadow tokens. No functional changes in this phase.
 
-Acceptance criteria:
+### 6.5 Page-by-Page Check
 
-- Desktop table remains efficient.
-- Mobile layout does not horizontally overflow.
-- Primary actions are usable with touch.
-- Text does not overlap or escape containers.
-- Filter state is visible and removable on small screens.
+Dashboard, Progress, Problems, Favorites, My Lists, Settings, Navigation (incl. mobile) — each reviewed for spacing, alignment, and whether it visually feels like the same product as the others.
 
-Validation checklist:
+### 6.6 Final Questions
 
-- Check 320px, 375px, 768px, 1024px, 1440px widths.
-- Verify table/card row actions.
-- Verify dialogs fit mobile viewport.
-- Verify nav does not overlap content.
-- Verify long topic/company names.
+- Does every page feel like the same product?
+- Are colors consistent (especially difficulty colors)?
+- Is spacing consistent?
+- Does anything feel visually out of place?
 
-———
+Fix what you find; this phase doesn't close until the answer to all four is yes.
 
-Phase 8: Loading, Empty, Error, And Accessibility Hardening
+---
 
-Objective:
-Make all interaction states explicit and accessible.
+## 7. Master Validation Checklist
 
-Scope:
+One checklist, referenced by every phase above — don't re-run a separate copy per page.
 
-- Add reusable state components.
-- Replace raw clickable spans with buttons or proper checkbox/menu items.
-- Add labels, aria attributes, and keyboard behavior where missing.
-- Improve error messages for GitHub, Firebase config, auth, and Firestore.
-- Add skeletons for dashboard/table.
+**Build & Export**
+- [ ] `npm run build` succeeds
+- [ ] Static export output generated (if configured)
+- [ ] All routes work with configured `basePath`
+- [ ] `/analytics` redirects to `/progress`
 
-Files/components affected:
+**Lint & Types**
+- [ ] Lint passes
+- [ ] Typecheck passes
+- [ ] No `any` in core data models
+- [ ] No dead imports/unused components
 
-- CompanySelector
-- TopicSelector
-- QuestionTable
-- NotesDialog
-- Heatmap
-- FilterBar / ProblemToolbar
-- New EmptyState, ErrorState, LoadingSkeleton
+**Responsiveness** — 1440 / 1024 / 768 / 375 / 320px, no unintended horizontal overflow, dialogs fit mobile viewport
 
-Dependencies:
+**Accessibility** — full keyboard reachability, visible focus states, `aria-label` on icon-only controls, WCAG AA contrast (4.5:1 / 3:1), states announced to screen readers
 
-- UI component foundation.
+**Performance** — large dataset stays responsive, filter/sort/pagination use memoized data, no unnecessary re-renders (verify in React DevTools), charts lazy-loaded, no layout shift on load, Lighthouse Performance ≥ 90 / Accessibility ≥ 90
 
-Risks:
+**Data Integrity** — CSV fetch behavior unchanged, Firebase auth flow unchanged, existing progress fields preserved (solved, attempted, bookmarked, notes, timestamps), heatmap uses existing activity docs, signed-out flow works, clear error when Firebase isn't configured
 
-- Changing interactive elements may subtly affect styling.
-- Dialog focus behavior should remain correct.
+**UX Quality** — nav labels clear, Dashboard useful at a glance, Progress has meaningful stats + history, filters understandable and resettable in one action, skeletons match final layout shape, empty states have CTAs, errors are recoverable, animations are subtle
 
-Acceptance criteria:
+**Visual Consistency** (Phase 6 specific) — one difficulty color system applied everywhere, company identifier (badge or logo) consistent, charts share a visual language, components share spacing/radius/shadow tokens
 
-- All major controls are keyboard reachable.
-- Dialogs have titles and sensible focus handling.
-- Empty/error/loading states exist for CSV load, auth, progress, activity, no results, no favorites.
-- Disabled login state explains Firebase configuration issue.
+---
 
-Validation checklist:
+## 8. Open Decisions / Risks (carried forward, not buried in status markers)
 
-- Keyboard-only pass.
-- Screen reader label spot-check.
-- Check focus rings.
-- Check disabled states.
-- Check no-results and network-error states.
-
-———
-
-Phase 9: Premium Design System And Micro-Interactions
-
-Objective:
-Upgrade visual quality while staying within Tailwind/shadcn conventions.
-
-Scope:
-
-- Define a restrained design language: background, surfaces, borders, typography, status colors.
-- Add reusable badges, cards, toolbar styling, active states.
-- Add subtle transitions for filters, row hover, stat cards, bookmark/favorite toggles.
-- Keep motion minimal and respectful.
-
-Files/components affected:
-
-- src/app/globals.css
-- shared UI components
-- MetricCard
-- StatusBadge
-- DifficultyBadge
-- TopicBadge
-- AppShell
-- problem/dashboard/analytics components
-
-Dependencies:
-
-- Stable component hierarchy.
-
-Risks:
-
-- Over-styling can obscure productivity workflows.
-- Color contrast must remain accessible.
-- Motion should not make table interactions feel sluggish.
-
-Acceptance criteria:
-
-- Consistent surface, border, radius, spacing, and text hierarchy.
-- Clear visual states for active filters, favorites, solved, attempted, revision.
-- Micro-interactions are subtle and do not alter behavior.
-- Meets reasonable contrast expectations.
-
-Validation checklist:
-
-- Visual scan of all routes.
-- Dark theme contrast check.
-- Hover/focus/active state check.
-- Reduced-motion consideration if animations are added.
-- Mobile and desktop screenshots.
-
-———
-
-Phase 10: Validation, Performance, And Deployment Readiness
-
-Objective:
-Ensure the production-quality upgrade is stable and deployable.
-
-Scope:
-
-- Build/lint fixes.
-- Add minimal tests if project test tooling is introduced.
-- Performance review for large CSVs.
-- Check static export compatibility.
-- Resolve deployment path mismatch if approved.
-
-Files/components affected:
-
-- package.json
-- next.config.ts
-- possible test config files
-- all touched components
-
-Dependencies:
-
-- All previous phases.
-
-Risks:
-
-- Adding a test framework increases setup scope.
-- Changing basePath may affect current deployment.
-
-Acceptance criteria:
-
-- Build succeeds.
-- Lint succeeds or known Next lint script issue is addressed.
-- Static export works.
-- Routes work with configured base path.
-- No obvious regressions in existing functionality.
-
-Validation checklist:
-
-- npm run build
-- lint command or replacement
-- route smoke test: /, /analytics, /favorites
-- auth smoke test
-- CSV load smoke test
-- Firestore progress smoke test
-- responsive pass
-- accessibility pass
-- performance pass with large list
-
-———
-
-4. Refactoring Plan
-
-Safe refactors that should not change behavior:
-
-- Extract search debounce from page.tsx into useDebouncedValue.
-- Move problem filtering/sorting into pure utility functions with typed inputs.
-- Move pagination into usePagination.
-- Replace duplicated search filtering with one shared pipeline.
-- Extract StatPill and ProgressList from DashboardStats.
-- Replace direct Radix Dialog usage with existing local Dialog wrapper.
-- Replace raw checkboxes in QuestionTable with the existing Checkbox primitive.
-- Extract row action buttons into ProblemRowActions.
-- Extract difficulty color logic into DifficultyBadge.
-- Replace hardcoded emoji/check indicators in menus with icons or accessible selected state.
-- Move static topic/company option data into separate constants files.
-- Remove unused Firebase service functions only after confirming they are not planned for near-term use.
-- Improve service error handling without changing call sites first.
-- Normalize naming: choose “Favorites” or “Bookmarks” as product language, then alias internally if needed.
-- Split FilterBar into ProblemFilters, SearchInput, and UserMenu.
-- Add typed result/error shapes for GitHub fetchers later, after UI state components exist.
-
-———
-
-5. Final Review Checklist
-
-Build And Static Export
-
-- npm run build succeeds.
-- Static export output is generated.
-- App works with configured basePath.
-- README deployment URL and next.config.ts path are consistent or documented.
-
-Lint And Type Safety
-
-- Lint command succeeds or is updated for current Next.js version.
-- TypeScript build has no errors.
-- No any introduced for core data models.
-- No dead imports or unused components.
-
-Tests
-
-- Pure filter/sort/pagination utilities covered if test tooling exists.
-- Progress stat derivation covered if test tooling exists.
-- Manual regression checklist completed if automated tests are not added.
-
-Responsiveness
-
-- Desktop, tablet, and mobile layouts checked.
-- No horizontal overflow on mobile.
-- Dialogs fit mobile viewport.
-- Long titles/topics/company names do not break layout.
-- Table/card actions remain usable on touch screens.
-
-Accessibility
-
-- Keyboard navigation works for nav, filters, dialogs, dropdowns, table actions.
-- Focus states are visible.
-- Dialogs have accessible titles.
-- Icon-only buttons have labels/tooltips.
-- Clickable spans are replaced or given proper semantics.
-- Color contrast is acceptable.
-- Loading/error/empty states are announced or readable.
-
-Performance
-
-- Large CSV list remains responsive.
-- Filtering/sorting/pagination use memoized derived data.
-- Avoid unnecessary refetches.
-- Avoid excessive re-renders from unstable callback props.
-- Consider virtualization only if pagination is insufficient.
-
-Data And Regression
-
-- Existing CSV fetch behavior preserved.
-- Existing Firebase auth behavior preserved.
-- Existing progress fields preserved.
-- Existing solved/attempted/bookmarked/revision/notes behavior preserved.
-- Firestore rules still match written data.
-- Signed-out flow still works.
-- Firebase-not-configured flow is clear.
-- Activity heatmap still renders existing activity docs.
-
-UX Quality
-
-- Navigation is clear.
-- Dashboard is useful immediately.
-- Analytics page has meaningful stats.
-- Favorites page has clear value.
-- Filters are understandable and resettable.
-- Loading, empty, and error states are polished.
-- Micro-interactions are subtle and do not slow workflows.
+- **Company logos**: resolved in §6.2 — initials badges, not real logos, unless a follow-up phase does a license review.
+- **Virtualization on the heatmap**: don't build it speculatively (§1) — only if real data shows it's needed.
+- **Trend claims in Insights** (§2): need a minimum-sample-size rule before showing "increasing/decreasing," to avoid misleading users with noisy small-sample data.
+- **`onSnapshot` vs `getDocs`**: needs a per-feature decision (read frequency, staleness tolerance), not a blanket default — flagged in §4 so it doesn't get applied inconsistently.

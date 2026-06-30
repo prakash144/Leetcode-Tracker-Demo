@@ -5,6 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import CompanyLogo from "@/components/data-display/CompanyLogo";
 import CompanySearch from "./CompanySearch";
 
 // Define types for company categories
@@ -95,12 +96,13 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({
                                             key={company}
                                             onClick={() => handleCompanySelect(company)}
                                             aria-pressed={selectedCompany === company}
-                                            className={`px-3 py-1 text-xs rounded-full border cursor-pointer transition-colors duration-200 ${
+                                            className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full border cursor-pointer transition-colors duration-200 ${
                                                 selectedCompany === company
                                                     ? "bg-green-600 text-white border-green-500"
                                                     : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
                                             }`}
                                         >
+                                            <CompanyLogo company={company} size="sm" />
                                             {company}
                                         </button>
                                     ))}

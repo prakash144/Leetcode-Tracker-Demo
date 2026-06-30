@@ -8,10 +8,11 @@ import dynamic from "next/dynamic";
 import Footer from "@/app/components/Footer";
 import AppShell from "@/components/layout/AppShell";
 import PageHeader from "@/components/layout/PageHeader";
+import CompanyLogo from "@/components/data-display/CompanyLogo";
 import DifficultyBadge from "@/components/data-display/DifficultyBadge";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingState from "@/components/states/LoadingState";
-import DonutChart from "@/app/components/DonutChart";
+import { ProgressRingChart } from "@/app/components/ProgressRingChart";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProblemWorkspaceData } from "@/features/problems/hooks/useProblemWorkspaceData";
@@ -119,10 +120,10 @@ const DashboardPage = () => {
       .slice(0, 5);
   }, [stats.companyStats]);
 
-  const donutSegments = useMemo(() => {
+  const ringSegments = useMemo(() => {
     const colorMap: Record<string, string> = { Easy: "#22c55e", Medium: "#eab308", Hard: "#ef4444" };
     return stats.difficultyStats.map((d) => ({
-      name: d.name, value: d.solved, color: colorMap[d.name] || "#6366f1",
+      name: d.name, total: d.total, solved: d.solved, color: colorMap[d.name] || "#6366f1",
     }));
   }, [stats.difficultyStats]);
 
@@ -226,25 +227,36 @@ const DashboardPage = () => {
               </section>
 
               <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
-                <div className="flex items-start gap-4">
-                  <DonutChart
-                    segments={donutSegments}
-                    size={120}
-                    strokeWidth={20}
-                    centerLabel={`${stats.solved}`}
-                    centerSubLabel={`of ${stats.total}`}
-                    onSegmentClick={handleDifficultyClick}
-                  />
-                  <div className="space-y-2 min-w-0">
+                <div className="flex items-start gap-5">
+                  <div className="relative shrink-0">
+                    <ProgressRingChart
+                      segments={ringSegments}
+                      size={140}
+                      strokeWidth={20}
+                      onSegmentClick={handleDifficultyClick}
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-xl font-bold text-white">{stats.solved}</span>
+                      <span className="text-[10px] text-zinc-500 leading-tight">/ {stats.total}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2.5 min-w-0 flex-1">
                     <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Progress</h3>
-                    <div className="space-y-1.5 text-xs">
-                      {donutSegments.map((s) => (
-                        <div key={s.name} className="flex items-center gap-2">
-                          <span className="size-2 rounded-full" style={{ backgroundColor: s.color }} />
-                          <span className="text-zinc-400">{s.name}</span>
-                          <span className="text-zinc-200 font-medium ml-auto">{s.value}</span>
-                        </div>
-                      ))}
+                    <div className="space-y-2 text-xs">
+                      {ringSegments.map((s) => {
+                        const pct = s.total > 0 ? Math.round((s.solved / s.total) * 100) : 0;
+                        return (
+                          <div key={s.name} className="space-y-0.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-zinc-400">{s.name}</span>
+                              <span className="text-zinc-200 font-medium tabular-nums">{s.solved}/{s.total}</span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: s.color }} />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                     <Link href="/progress" className="inline-flex items-center gap-1 text-xs text-green-400 hover:text-green-300 mt-2">
                       Full stats <ArrowRight className="size-3" />
@@ -363,12 +375,10 @@ const DashboardPage = () => {
             <div className="grid gap-4 lg:grid-cols-2">
               <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Difficulty Breakdown</h3>
-                {donutSegments.some((s) => s.value > 0) ? (
+                {ringSegments.some((s) => s.solved > 0) ? (
                   <div className="space-y-3">
-                    {donutSegments.map((seg) => {
-                      const diffTotal = stats.difficultyStats.find((d) => d.name === seg.name);
-                      const total = diffTotal?.total || 0;
-                      const percent = total > 0 ? Math.round((seg.value / total) * 100) : 0;
+                    {ringSegments.map((seg) => {
+                      const percent = seg.total > 0 ? Math.round((seg.solved / seg.total) * 100) : 0;
                       return (
                         <Link
                           key={seg.name}
@@ -377,7 +387,7 @@ const DashboardPage = () => {
                         >
                           <div className="flex items-center justify-between text-sm mb-1.5">
                             <span className="font-medium">{seg.name}</span>
-                            <span>{seg.value}/{total} ({percent}%)</span>
+                            <span>{seg.solved}/{seg.total} ({percent}%)</span>
                           </div>
                           <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
                             <div
@@ -406,9 +416,14 @@ const DashboardPage = () => {
                           href={`/problems`}
                           className="block rounded-lg border border-zinc-800 bg-zinc-950 p-3 transition-colors hover:bg-zinc-800/50"
                         >
-                          <div className="flex items-center justify-between text-sm mb-1.5">
-                            <span className="font-medium text-zinc-200 truncate">{company.name}</span>
-                            <span className="text-xs text-zinc-400 shrink-0 ml-2">{company.solved} solved</span>
+                          <div className="flex items-center gap-3 mb-1.5">
+                            <CompanyLogo company={company.name} size="sm" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-zinc-200 truncate text-sm">{company.name}</span>
+                                <span className="text-xs text-zinc-400 shrink-0 ml-2">{company.solved} solved</span>
+                              </div>
+                            </div>
                           </div>
                           <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
                             <div className="h-full rounded-full bg-green-500 transition-all duration-500" style={{ width: `${percent}%` }} />

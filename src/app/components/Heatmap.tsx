@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useHeatmapData, type HeatmapDay } from "@/hooks/useHeatmapData";
 import ErrorState from "@/components/states/ErrorState";
 import EmptyState from "@/components/states/EmptyState";
@@ -20,15 +20,16 @@ const TIME_RANGES: { label: string; value: TimeRange }[] = [
 
 const DAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""];
 
-const LEVELS = [0, 1, 2, 4, 6, 10];
+const CELL = 11;
+const GAP = 3;
+const DAY_LABEL_W = 28;
 
-const getCellColor = (count: number) => {
-    if (count >= 10) return "bg-green-400";
-    if (count >= 6) return "bg-green-500";
-    if (count >= 4) return "bg-green-600";
-    if (count >= 2) return "bg-green-700";
-    if (count >= 1) return "bg-green-900";
-    return "bg-zinc-800";
+const getActivityFill = (count: number) => {
+    if (count >= 10) return "#22c55e";
+    if (count >= 6) return "#16a34a";
+    if (count >= 3) return "#15803d";
+    if (count >= 1) return "#166534";
+    return "transparent";
 };
 
 const getCellLabel = (count: number) => {
@@ -36,8 +37,8 @@ const getCellLabel = (count: number) => {
     return `${count} ${count === 1 ? "submission" : "submissions"}`;
 };
 
-const CELL = 12;
-const GAP = 2;
+const LEVELS = [0, 1, 3, 6, 10];
+const LEVEL_COLORS = ["transparent", "#166534", "#15803d", "#16a34a", "#22c55e"];
 
 interface CalendarData {
     weeks: HeatmapDay[][];
@@ -124,6 +125,8 @@ const Heatmap = memo(function Heatmap({ uid }: HeatmapProps) {
     const { days: rawDays, loading, error } = useHeatmapData(uid);
     const [timeRange, setTimeRange] = useState<TimeRange>("current");
     const [tooltip, setTooltip] = useState<{ date: string; count: number; x: number; y: number } | null>(null);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const filteredDays = useMemo(() => {
         if (rawDays.length === 0) return [];
@@ -185,151 +188,160 @@ const Heatmap = memo(function Heatmap({ uid }: HeatmapProps) {
         setTooltip(null);
     }, []);
 
-    return (
-        <section className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 mb-4">
-            {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                <h2 className="text-sm font-semibold text-zinc-200">Activity</h2>
-                {uid && !loading && (
-                    <div className="flex gap-0.5">
-                        {TIME_RANGES.map((tr) => (
-                            <button
-                                key={tr.value}
-                                type="button"
-                                onClick={() => setTimeRange(tr.value)}
-                                className={`px-2 py-0.5 text-xs font-medium rounded-full transition-colors ${
-                                    timeRange === tr.value
-                                        ? "bg-green-500/15 text-green-300"
-                                        : "text-zinc-500 hover:text-zinc-300"
-                                }`}
-                            >
-                                {tr.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
+    const handleDropdownToggle = useCallback(() => {
+        setDropdownOpen((prev) => !prev);
+    }, []);
 
-            {/* Summary stats */}
-            {uid && !loading && hasActivity && (
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mb-4 text-xs">
-                    <div>
-                        <span className="text-zinc-500">Submissions </span>
-                        <span className="text-zinc-200 font-medium">{stats.totalSubmissions}</span>
+    const handleDropdownSelect = useCallback((value: TimeRange) => {
+        setTimeRange(value);
+        setDropdownOpen(false);
+    }, []);
+
+    const svgWidth = weeks.length * (CELL + GAP) + DAY_LABEL_W;
+    const svgHeight = 7 * (CELL + GAP) + 18;
+
+    const currentLabel = TIME_RANGES.find((t) => t.value === timeRange)?.label || "Current";
+
+    return (
+        <section className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-5">
+            {/* Header: submissions count + stats + dropdown */}
+            {uid && !loading && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-4">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-lg font-semibold text-white">{stats.totalSubmissions}</span>
+                        <span className="text-sm text-zinc-400">submissions in the past one year</span>
                     </div>
-                    <div>
-                        <span className="text-zinc-500">Active days </span>
-                        <span className="text-zinc-200 font-medium">{stats.activeDays}</span>
+                    <div className="flex items-center gap-3 text-xs">
+                        <div className="flex items-center gap-1">
+                            <span className="text-zinc-500">Total active days:</span>
+                            <span className="font-medium text-zinc-200">{stats.activeDays}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span className="text-zinc-500">Max streak:</span>
+                            <span className="font-medium text-zinc-200">{stats.maxStreak}</span>
+                        </div>
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                type="button"
+                                onClick={handleDropdownToggle}
+                                className="flex cursor-pointer items-center rounded-md px-2.5 py-1 text-xs text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition-colors"
+                            >
+                                {currentLabel}
+                                <svg className="ml-2 size-3" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M4.929 7.913l7.078 7.057 7.064-7.057a1 1 0 111.414 1.414l-7.77 7.764a1 1 0 01-1.415 0L3.515 9.328a1 1 0 011.414-1.414z" clipRule="evenodd" /></svg>
+                            </button>
+                            {dropdownOpen && (
+                                <div className="absolute right-0 top-full mt-1 z-50 w-32 rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl">
+                                    {TIME_RANGES.map((t) => (
+                                        <button
+                                            key={t.value}
+                                            type="button"
+                                            onClick={() => handleDropdownSelect(t.value)}
+                                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${timeRange === t.value ? "text-green-400 bg-green-500/10" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"}`}
+                                        >
+                                            {t.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    {stats.currentStreak > 0 && (
-                        <div>
-                            <span className="text-zinc-500">Streak </span>
-                            <span className="text-green-400 font-medium">🔥 {stats.currentStreak} day{stats.currentStreak !== 1 ? "s" : ""}</span>
-                        </div>
-                    )}
-                    {stats.maxStreak > 1 && (
-                        <div>
-                            <span className="text-zinc-500">Best </span>
-                            <span className="text-zinc-200 font-medium">{stats.maxStreak} days</span>
-                        </div>
-                    )}
                 </div>
             )}
 
             {/* States */}
             {error && <ErrorState message={error} />}
-            {!uid && (
-                <EmptyState message="Sign in to see your activity heatmap." />
-            )}
+            {!uid && <EmptyState message="Sign in to see your activity heatmap." />}
             {uid && loading && <LoadingState message="Loading activity data..." />}
-            {uid && !loading && !error && !hasActivity && (
-                <EmptyState message="No activity yet. Solve or attempt a problem to start filling the heatmap." />
-            )}
+            {uid && !loading && !error && !hasActivity && <EmptyState message="No activity yet. Solve or attempt a problem to start filling the heatmap." />}
 
-            {/* Heatmap grid */}
+            {/* SVG Heatmap */}
             {uid && !loading && hasActivity && (
                 <>
                     <div className="overflow-x-auto scrollbar-thin-dark">
-                        <div className="inline-flex flex-col">
-                            {/* Month labels */}
-                            <div className="flex mb-1" style={{ height: `${CELL}px` }}>
-                                <div className="shrink-0 mr-1.5" style={{ width: `${DAY_LABELS.reduce((w, l) => Math.max(w, l.length), 0) * 6 + 2}px` }} aria-hidden="true" />
-                                <div className="flex" style={{ gap: `${GAP}px` }}>
-                                    {weeks.map((_, weekIdx) => {
-                                        const ml = monthLabels.find((m) => m.weekIndex === weekIdx);
-                                        return (
-                                            <div
-                                                key={weekIdx}
-                                                className="shrink-0"
-                                                style={{ width: `${CELL}px` }}
-                                            >
-                                                {ml && (
-                                                    <span
-                                                        className="block text-[10px] font-medium leading-none text-zinc-500 truncate pointer-events-none"
-                                                    >
-                                                        {ml.label}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                        <svg
+                            width={svgWidth}
+                            height={svgHeight}
+                            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                            className="shrink-0"
+                        >
+                            {/* Day labels */}
+                            {DAY_LABELS.map((label, i) => (
+                                label ? (
+                                    <text
+                                        key={label}
+                                        x={DAY_LABEL_W - 4}
+                                        y={i * (CELL + GAP) + CELL - 1}
+                                        textAnchor="end"
+                                        fill="#71717a"
+                                        fontSize={10}
+                                        fontFamily="inherit"
+                                    >
+                                        {label}
+                                    </text>
+                                ) : null
+                            ))}
 
-                            {/* Grid body */}
-                            <div className="flex">
-                                <div
-                                    className="flex flex-col mr-1.5"
-                                    style={{ gap: `${GAP}px`, width: `${DAY_LABELS.reduce((w, l) => Math.max(w, l.length), 0) * 6 + 2}px` }}
+                            {/* Grid cells */}
+                            {weeks.map((week, weekIdx) =>
+                                week.map((day, dayIdx) => {
+                                    const isToday = day.date === todayStr;
+                                    const fill = day.date > todayStr ? "transparent" :
+                                        day.count > 0 ? getActivityFill(day.count) : "#27272a";
+                                    return (
+                                        <rect
+                                            key={day.date}
+                                            x={DAY_LABEL_W + weekIdx * (CELL + GAP)}
+                                            y={dayIdx * (CELL + GAP)}
+                                            width={CELL}
+                                            height={CELL}
+                                            rx={2}
+                                            ry={2}
+                                            fill={fill}
+                                            stroke={isToday ? "#22c55e" : "none"}
+                                            strokeWidth={isToday ? 1.5 : 0}
+                                            className="cursor-pointer transition-colors duration-100"
+                                            onMouseEnter={(e) => handleMouseEnter(day, e as unknown as React.MouseEvent)}
+                                            onMouseLeave={handleMouseLeave}
+                                        />
+                                    );
+                                })
+                            )}
+
+                            {/* Month labels */}
+                            {monthLabels.map((ml) => (
+                                <text
+                                    key={ml.label + ml.weekIndex}
+                                    x={DAY_LABEL_W + ml.weekIndex * (CELL + GAP) + CELL / 2}
+                                    y={svgHeight - 2}
+                                    textAnchor="middle"
+                                    fill="#71717a"
+                                    fontSize={10}
+                                    fontFamily="inherit"
                                 >
-                                    {DAY_LABELS.map((label, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex items-center text-[10px] text-zinc-500 leading-none"
-                                            style={{ height: `${CELL}px` }}
-                                        >
-                                            {label}
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="flex" style={{ gap: `${GAP}px` }}>
-                                    {weeks.map((week, weekIdx) => (
-                                        <div key={weekIdx} className="flex flex-col" style={{ gap: `${GAP}px` }}>
-                                            {week.map((day) => {
-                                                const isToday = day.date === todayStr;
-                                                return (
-                                                    <div
-                                                        key={day.date}
-                                                        title={`${new Date(day.date).toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}: ${getCellLabel(day.count)}`}
-                                                        aria-label={`${new Date(day.date).toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}: ${getCellLabel(day.count)}`}
-                                                        className={`rounded-sm cursor-pointer shrink-0 ${getCellColor(day.count)} ${isToday ? "ring-1 ring-green-300 ring-offset-[1.5px] ring-offset-zinc-900" : ""}`}
-                                                        style={{ width: `${CELL}px`, height: `${CELL}px` }}
-                                                        onMouseEnter={(e) => handleMouseEnter(day, e)}
-                                                        onMouseLeave={handleMouseLeave}
-                                                    />
-                                                );
-                                            })}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                                    {ml.label}
+                                </text>
+                            ))}
+                        </svg>
                     </div>
 
-                    {/* Legend */}
-                    <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-zinc-500">
-                        <div className="flex items-center gap-1">
-                            <span>Less</span>
-                            {LEVELS.map((count) => (
+                    {/* Legend: Less █ █ █ █ █ More */}
+                    <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
+                        <span>Less</span>
+                        <div className="flex gap-0.5">
+                            {LEVELS.map((count, i) => (
                                 <span
                                     key={count}
-                                    aria-label={`${count} activity level`}
-                                    className={`rounded-sm ${getCellColor(count)}`}
-                                    style={{ width: `${CELL}px`, height: `${CELL}px` }}
+                                    className="rounded-sm"
+                                    style={{
+                                        width: `${CELL}px`,
+                                        height: `${CELL}px`,
+                                        backgroundColor: i === 0 ? "#27272a" : LEVEL_COLORS[i],
+                                        display: "inline-block",
+                                    }}
                                 />
                             ))}
-                            <span>More</span>
                         </div>
+                        <span>More</span>
                     </div>
 
                     {/* Tooltip */}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import CompanyLogo from "@/components/data-display/CompanyLogo";
 
 interface CompanySearchProps {
     onCompanySelect: (company: string) => void;
@@ -107,12 +108,13 @@ const CompanySearch = ({
                             role="option"
                             aria-selected={highlightIndex === idx}
                             onClick={() => handleSelect(company)}
-                            className={`px-3 py-2 cursor-pointer hover:bg-zinc-700 ${
-                                idx === highlightIndex ? "bg-zinc-700" : ""
-                            }`}
-                        >
-                            {company}
-                        </li>
+                         className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-zinc-700 ${
+                                 idx === highlightIndex ? "bg-zinc-700" : ""
+                             }`}
+                         >
+                             <CompanyLogo company={company} size="sm" />
+                             {company}
+                         </li>
                     ))}
                 </ul>
             )}

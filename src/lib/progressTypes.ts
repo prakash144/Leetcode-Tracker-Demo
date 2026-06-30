@@ -27,15 +27,6 @@ export interface UserProblemProgress {
   updatedAt: Timestamp;
 }
 
-export interface SerializableUserProblemProgress {
-  problemId: string;
-  solved: boolean;
-  attempted: boolean;
-  bookmarked: boolean;
-  inRevisionList: boolean;
-  notes: string;
-}
-
 export type ProgressMap = Record<string, UserProblemProgress>;
 
 export interface CustomList {
@@ -47,14 +38,4 @@ export interface CustomList {
   updatedAt: Timestamp;
 }
 
-export type CustomListsMap = Record<string, CustomList>;
 
-export interface AppUserProfile {
-  uid: string;
-  displayName: string | null;
-  email: string | null;
-  photoURL: string | null;
-  createdAt?: Timestamp;
-  updatedAt: Timestamp;
-  lastLoginAt: Timestamp;
-}
