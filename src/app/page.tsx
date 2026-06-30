@@ -1,12 +1,22 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import Link from "next/link";
-import { ArrowRight, BarChart3, Bookmark, Flame, ListChecks, Play, RotateCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, BarChart3, CheckCircle2, Flame, FolderKanban, Play, Shuffle } from "lucide-react";
 import dynamic from "next/dynamic";
 import Footer from "@/app/components/Footer";
-import DashboardStats from "@/app/components/DashboardStats";
 import AppShell from "@/components/layout/AppShell";
+import PageHeader from "@/components/layout/PageHeader";
+import DifficultyBadge from "@/components/data-display/DifficultyBadge";
+import ErrorState from "@/components/states/ErrorState";
+import LoadingState from "@/components/states/LoadingState";
+import DonutChart from "@/app/components/DonutChart";
+import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useProblemWorkspaceData } from "@/features/problems/hooks/useProblemWorkspaceData";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import type { Problem, UserProblemProgress } from "@/lib/progressTypes";
 
 const Heatmap = dynamic(() => import("@/app/components/Heatmap"), {
   ssr: false,
@@ -27,56 +37,20 @@ const Heatmap = dynamic(() => import("@/app/components/Heatmap"), {
     </div>
   ),
 });
-import PageHeader from "@/components/layout/PageHeader";
-import MetricCard from "@/components/data-display/MetricCard";
-import ErrorState from "@/components/states/ErrorState";
-import LoadingState from "@/components/states/LoadingState";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useProblemWorkspaceData } from "@/features/problems/hooks/useProblemWorkspaceData";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
-import type { Problem, UserProblemProgress } from "@/lib/progressTypes";
-
-const quickActions = [
-  {
-    title: "Open Problems",
-    description: "Search, filter, sort, and update progress from the dedicated workspace.",
-    href: "/problems",
-    icon: ListChecks,
-    enabled: true,
-  },
-  {
-    title: "Review Favorites",
-    description: "Review your bookmarked problems from the dedicated favorites view.",
-    href: "/favorites",
-    icon: Bookmark,
-    enabled: true,
-  },
-  {
-    title: "View Analytics",
-    description: "Inspect completion, topic, difficulty, and activity trends.",
-    href: "/analytics",
-    icon: BarChart3,
-    enabled: true,
-  },
-];
 
 const computeStreak = (progressMap: Record<string, UserProblemProgress>): number => {
   const solvedDates = new Set<string>();
   for (const p of Object.values(progressMap)) {
     if (p.solved && p.solvedAt) {
-      const d = new Date(p.solvedAt.seconds * 1000).toISOString().slice(0, 10);
-      solvedDates.add(d);
+      solvedDates.add(new Date(p.solvedAt.seconds * 1000).toISOString().slice(0, 10));
     }
   }
   if (solvedDates.size === 0) return 0;
   let streak = 0;
-  const today = new Date();
   for (let i = 0; i < 365; i++) {
-    const d = new Date(today);
+    const d = new Date();
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    if (solvedDates.has(key)) {
+    if (solvedDates.has(d.toISOString().slice(0, 10))) {
       streak++;
     } else {
       break;
@@ -85,27 +59,8 @@ const computeStreak = (progressMap: Record<string, UserProblemProgress>): number
   return streak;
 };
 
-const findLastAttempted = (
-  questions: Problem[],
-  progressMap: Record<string, UserProblemProgress>
-): { problem: Problem; progress: UserProblemProgress } | null => {
-  const entries: { problem: Problem; progress: UserProblemProgress }[] = [];
-  for (const p of Object.values(progressMap)) {
-    if (p.attempted && !p.solved && p.attemptedAt) {
-      const q = questions.find((q) => q.problemId === p.problemId);
-      if (q) entries.push({ problem: q, progress: p });
-    }
-  }
-  if (entries.length === 0) return null;
-  entries.sort((a, b) => {
-    const ta = a.progress.attemptedAt!.seconds * 1000;
-    const tb = b.progress.attemptedAt!.seconds * 1000;
-    return tb - ta;
-  });
-  return entries[0];
-};
-
 const DashboardPage = () => {
+  const router = useRouter();
   const { auth, progress, questionsState } = useProblemWorkspaceData();
   const stats = useDashboardStats(questionsState.questions, progress.progressMap);
 
@@ -119,10 +74,83 @@ const DashboardPage = () => {
     [auth.user, progress.progressMap]
   );
 
-  const continueProblem = useMemo(
-    () => findLastAttempted(questionsState.questions, progress.progressMap),
-    [questionsState.questions, progress.progressMap]
-  );
+  const recentSolved = useMemo(() => {
+    const solved: { problem: Problem; date: Date }[] = [];
+    for (const [problemId, p] of Object.entries(progress.progressMap)) {
+      if (p.solved && p.solvedAt) {
+        const problem = questionsState.questions.find((q) => q.problemId === problemId);
+        if (problem) solved.push({ problem, date: new Date(p.solvedAt.seconds * 1000) });
+      }
+    }
+    return solved.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5);
+  }, [progress.progressMap, questionsState.questions]);
+
+  const lastAttempted = useMemo(() => {
+    const entries: { problem: Problem; progress: UserProblemProgress }[] = [];
+    for (const p of Object.values(progress.progressMap)) {
+      if (p.attempted && !p.solved && p.attemptedAt) {
+        const q = questionsState.questions.find((q) => q.problemId === p.problemId);
+        if (q) entries.push({ problem: q, progress: p });
+      }
+    }
+    if (entries.length === 0) return null;
+    entries.sort((a, b) => (b.progress.attemptedAt!.seconds * 1000) - (a.progress.attemptedAt!.seconds * 1000));
+    return entries[0];
+  }, [questionsState.questions, progress.progressMap]);
+
+  const lastSolved = useMemo(() => {
+    let last: { problem: Problem; date: Date } | null = null;
+    for (const [problemId, p] of Object.entries(progress.progressMap)) {
+      if (p.solved && p.solvedAt) {
+        const d = new Date(p.solvedAt.seconds * 1000);
+        if (!last || d > last.date) {
+          const problem = questionsState.questions.find((q) => q.problemId === problemId);
+          if (problem) last = { problem, date: d };
+        }
+      }
+    }
+    return last;
+  }, [questionsState.questions, progress.progressMap]);
+
+  const topCompanies = useMemo(() => {
+    return stats.companyStats
+      .filter((c) => c.solved > 0)
+      .sort((a, b) => b.solved - a.solved)
+      .slice(0, 5);
+  }, [stats.companyStats]);
+
+  const donutSegments = useMemo(() => {
+    const colorMap: Record<string, string> = { Easy: "#22c55e", Medium: "#eab308", Hard: "#ef4444" };
+    return stats.difficultyStats.map((d) => ({
+      name: d.name, value: d.solved, color: colorMap[d.name] || "#6366f1",
+    }));
+  }, [stats.difficultyStats]);
+
+  const difficultyColors: Record<string, string> = {
+    Easy: "bg-green-500/20 border-green-500/30 text-green-400",
+    Medium: "bg-yellow-500/20 border-yellow-500/30 text-yellow-400",
+    Hard: "bg-red-500/20 border-red-500/30 text-red-400",
+  };
+
+  const difficultyBarColors: Record<string, string> = {
+    Easy: "bg-green-500",
+    Medium: "bg-yellow-500",
+    Hard: "bg-red-500",
+  };
+
+  const isLoading = questionsState.loading || progress.loading;
+  const hasError = questionsState.error || auth.error || progress.error;
+
+  const quickActions = [
+    { title: "Continue Solving", description: "Resume your last problem", href: "/problems", icon: Play },
+    { title: "Random Problem", description: "Get a random challenge", href: "/problems", icon: Shuffle },
+    { title: "My Lists", description: "Manage custom problem lists", href: "/my-lists", icon: FolderKanban },
+    { title: "Progress", description: "Detailed stats and history", href: "/progress", icon: BarChart3 },
+  ];
+
+  const handleDifficultyClick = useCallback(() => {
+    router.push("/progress");
+  }, [router]);
 
   return (
     <AppShell
@@ -137,180 +165,283 @@ const DashboardPage = () => {
         eyebrow="Dashboard"
         title="Progress Overview"
         description="Track your journey. Crack your dream company. 🚀"
-        actions={
-          <Button
-            asChild
-            className="bg-green-500 text-black hover:bg-green-400"
-          >
-            <Link href="/problems">
-              Open Problems
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
-        }
       />
 
       <div className="mx-auto max-w-7xl space-y-6 p-4 sm:px-6 lg:px-8">
-        {questionsState.loading && <LoadingState />}
-        {questionsState.error && <ErrorState message={questionsState.error} />}
-        {auth.error && <ErrorState message={auth.error} />}
-        {progress.error && <ErrorState message={progress.error} />}
+        {isLoading && <LoadingState />}
+        {hasError && <ErrorState message={hasError} />}
 
-        {!questionsState.loading && !questionsState.error && (
+        {!isLoading && !hasError && (
           <>
-            {/* Profile Summary */}
-            <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
-              <div className="flex flex-wrap items-center gap-5">
-                {auth.user ? (
-                  <>
-                    <Avatar className="size-14 border-2 border-green-500/30">
-                      {auth.user.photoURL && (
-                        <AvatarImage src={auth.user.photoURL} alt={auth.user.displayName ?? "User"} />
-                      )}
-                      <AvatarFallback className="bg-zinc-800 text-lg text-green-400">
-                        {(auth.user.displayName || auth.user.email || "U").charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-lg font-semibold text-white truncate">
-                        {auth.user.displayName || "User"}
-                      </h3>
-                      <p className="text-sm text-zinc-400">
-                        {stats.total} problems in current dataset
-                      </p>
+            {/* Row 1: Profile Summary + Overall Progress */}
+            <div className="grid gap-4 lg:grid-cols-3">
+              <section className="lg:col-span-2 rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
+                <div className="flex flex-wrap items-center gap-5">
+                  {auth.user ? (
+                    <>
+                      <Avatar className="size-14 border-2 border-green-500/30 shrink-0">
+                        {auth.user.photoURL && <AvatarImage src={auth.user.photoURL} alt={auth.user.displayName ?? "User"} />}
+                        <AvatarFallback className="bg-zinc-800 text-lg text-green-400">
+                          {(auth.user.displayName || auth.user.email || "U").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-semibold text-white truncate">{auth.user.displayName || "User"}</h3>
+                        <p className="text-sm text-zinc-400">{stats.total} problems in current dataset</p>
+                        {streak > 0 && (
+                          <div className="inline-flex items-center gap-1.5 rounded-md border border-orange-500/20 bg-orange-500/10 px-2.5 py-1 mt-1.5">
+                            <Flame className="size-4 text-orange-400" />
+                            <span className="text-sm font-bold text-orange-300">{streak}</span>
+                            <span className="text-xs text-zinc-400">day streak</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-6 text-center">
+                        <div><div className="text-2xl font-bold text-green-400">{stats.solved}</div><div className="text-xs text-zinc-500">Solved</div></div>
+                        <div><div className="text-2xl font-bold text-blue-400">{stats.attempted}</div><div className="text-xs text-zinc-500">Attempted</div></div>
+                        <div><div className="text-2xl font-bold text-yellow-400">{stats.bookmarked}</div><div className="text-xs text-zinc-500">Bookmarked</div></div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex size-14 items-center justify-center rounded-full border-2 border-dashed border-zinc-700 bg-zinc-800 text-2xl">🎯</div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Welcome to Interview Tracly</h3>
+                        <p className="text-sm text-zinc-400">Sign in to track your progress and unlock insights.</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                {stats.total > 0 && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-xs text-zinc-500 mb-1.5">
+                      <span>Overall Progress</span>
+                      <span>{solvedPercent}%</span>
                     </div>
-                    {streak > 0 && (
-                      <div className="flex items-center gap-2 rounded-lg border border-orange-500/20 bg-orange-500/10 px-4 py-2">
-                        <Flame className="size-5 text-orange-400" />
-                        <div className="text-sm">
-                          <span className="font-bold text-orange-300">{streak}</span>
-                          <span className="text-zinc-400 ml-1">day streak</span>
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-6 text-center">
-                      <div>
-                        <div className="text-2xl font-bold text-green-400">{stats.solved}</div>
-                        <div className="text-xs text-zinc-500">Solved</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-blue-400">{stats.attempted}</div>
-                        <div className="text-xs text-zinc-500">Attempted</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-yellow-400">{stats.bookmarked}</div>
-                        <div className="text-xs text-zinc-500">Bookmarked</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-cyan-400">{stats.revision}</div>
-                        <div className="text-xs text-zinc-500">Revision</div>
-                      </div>
+                    <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-500" style={{ width: `${solvedPercent}%` }} />
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex size-14 items-center justify-center rounded-full border-2 border-dashed border-zinc-700 bg-zinc-800 text-2xl">🎯</div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">Welcome to Interview Tracly</h3>
-                      <p className="text-sm text-zinc-400">Sign in to track your progress and unlock insights.</p>
-                    </div>
-                  </>
+                  </div>
                 )}
-              </div>
+              </section>
 
-              {stats.total > 0 && (
-                <div className="mt-4">
-                  <div className="flex items-center justify-between text-xs text-zinc-500 mb-1.5">
-                    <span>Overall Progress</span>
-                    <span>{solvedPercent}%</span>
+              <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
+                <div className="flex items-start gap-4">
+                  <DonutChart
+                    segments={donutSegments}
+                    size={120}
+                    strokeWidth={20}
+                    centerLabel={`${stats.solved}`}
+                    centerSubLabel={`of ${stats.total}`}
+                    onSegmentClick={handleDifficultyClick}
+                  />
+                  <div className="space-y-2 min-w-0">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Progress</h3>
+                    <div className="space-y-1.5 text-xs">
+                      {donutSegments.map((s) => (
+                        <div key={s.name} className="flex items-center gap-2">
+                          <span className="size-2 rounded-full" style={{ backgroundColor: s.color }} />
+                          <span className="text-zinc-400">{s.name}</span>
+                          <span className="text-zinc-200 font-medium ml-auto">{s.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <Link href="/progress" className="inline-flex items-center gap-1 text-xs text-green-400 hover:text-green-300 mt-2">
+                      Full stats <ArrowRight className="size-3" />
+                    </Link>
                   </div>
-                  <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-500"
-                      style={{ width: `${solvedPercent}%` }}
-                    />
-                  </div>
+                </div>
+              </section>
+            </div>
+
+            {/* Row 2: Activity Heatmap */}
+            <section>
+              <Heatmap uid={auth.user?.uid} />
+              {auth.user && (
+                <div className="mt-1 text-right">
+                  <Link href="/progress" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+                    View full history <ArrowRight className="size-3" />
+                  </Link>
                 </div>
               )}
             </section>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              <MetricCard label="Progress" value={`${solvedPercent}%`} />
-              <MetricCard label="Solved" value={`${stats.solved}/${stats.total}`} />
-              <MetricCard label="Attempted" value={`${stats.attempted}/${stats.total}`} />
-              <MetricCard label="Unsolved" value={stats.unsolved} />
-              <MetricCard label="Bookmarked" value={stats.bookmarked} />
-              <MetricCard label="Revision" value={stats.revision} />
+            {/* Row 3: Continue Solving + Recent Activity */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Continue Solving</h3>
+                {lastAttempted ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-500/15 text-green-400">
+                        <Play className="size-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-green-400 uppercase tracking-wider">Last Attempted</div>
+                        <div className="mt-0.5 truncate text-sm font-semibold text-white">{lastAttempted.problem.title}</div>
+                      </div>
+                      <DifficultyBadge difficulty={lastAttempted.problem.difficulty} />
+                    </div>
+                    <Link href="/problems" className="inline-flex items-center gap-1 text-xs text-green-400 hover:text-green-300">
+                      Resume <ArrowRight className="size-3" />
+                    </Link>
+                  </div>
+                ) : lastSolved ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-500/15 text-green-400">
+                        <Play className="size-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-zinc-500 uppercase tracking-wider">Last Solved</div>
+                        <div className="mt-0.5 truncate text-sm font-semibold text-white">{lastSolved.problem.title}</div>
+                      </div>
+                      <DifficultyBadge difficulty={lastSolved.problem.difficulty} />
+                    </div>
+                    <Link href="/problems" className="inline-flex items-center gap-1 text-xs text-green-400 hover:text-green-300">
+                      Solve another <ArrowRight className="size-3" />
+                    </Link>
+                  </div>
+                ) : (
+                  <Link href="/problems" className="group block">
+                    <div className="rounded-lg border border-dashed border-zinc-700 px-4 py-6 text-center transition-colors hover:border-zinc-600">
+                      <p className="text-sm text-zinc-400">Start solving your first problem</p>
+                      <span className="mt-2 inline-flex items-center gap-1 text-xs text-green-400 group-hover:text-green-300">
+                        Browse Problems <ArrowRight className="size-3" />
+                      </span>
+                    </div>
+                  </Link>
+                )}
+                {lastSolved && lastAttempted && (
+                  <div className="mt-3 pt-3 border-t border-zinc-800">
+                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                      <CheckCircle2 className="size-3 text-green-400" />
+                      Last solved: {formatRelativeTime(lastSolved.date)}
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Recent Activity</h3>
+                  {recentSolved.length > 0 && (
+                    <Link href="/progress" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">View all</Link>
+                  )}
+                </div>
+                {recentSolved.length > 0 ? (
+                  <ul className="space-y-2">
+                    {recentSolved.map((entry) => (
+                      <li key={entry.problem.problemId}>
+                        <a
+                          href={entry.problem.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-zinc-800/50"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium text-white">{entry.problem.title}</div>
+                            <div className="text-xs text-zinc-500">{formatRelativeTime(entry.date)}</div>
+                          </div>
+                          <DifficultyBadge difficulty={entry.problem.difficulty} />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-zinc-700 px-4 py-6 text-center">
+                    <p className="text-sm text-zinc-400">No solved problems yet</p>
+                    <Link href="/problems" className="mt-2 inline-flex items-center gap-1 text-xs text-green-400 hover:text-green-300">
+                      Start solving <ArrowRight className="size-3" />
+                    </Link>
+                  </div>
+                )}
+              </section>
             </div>
 
-            {/* Continue Solving */}
-            {continueProblem && (
-              <Link href="/problems" className="group block">
-                <section className="rounded-xl border border-green-500/20 bg-green-500/5 p-5 transition-colors hover:border-green-500/40 hover:bg-green-500/10">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-500/15 text-green-400 group-hover:bg-green-500/20">
-                      <Play className="size-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-medium text-green-400 uppercase tracking-wider">Continue Solving</div>
-                      <div className="mt-0.5 truncate text-sm font-semibold text-white">
-                        {continueProblem.problem.title}
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-3 text-xs text-zinc-400">
-                      <span className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-0.5 font-medium capitalize">
-                        {continueProblem.problem.difficulty}
-                      </span>
-                      <ArrowRight className="size-4 text-green-400 transition-transform group-hover:translate-x-0.5" />
-                    </div>
+            {/* Row 4: Difficulty Breakdown + Company Progress */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Difficulty Breakdown</h3>
+                {donutSegments.some((s) => s.value > 0) ? (
+                  <div className="space-y-3">
+                    {donutSegments.map((seg) => {
+                      const diffTotal = stats.difficultyStats.find((d) => d.name === seg.name);
+                      const total = diffTotal?.total || 0;
+                      const percent = total > 0 ? Math.round((seg.value / total) * 100) : 0;
+                      return (
+                        <Link
+                          key={seg.name}
+                          href={`/progress`}
+                          className={`block rounded-lg border p-3 transition-colors hover:opacity-80 ${difficultyColors[seg.name] || "bg-zinc-800/50 border-zinc-700 text-zinc-300"}`}
+                        >
+                          <div className="flex items-center justify-between text-sm mb-1.5">
+                            <span className="font-medium">{seg.name}</span>
+                            <span>{seg.value}/{total} ({percent}%)</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${difficultyBarColors[seg.name] || "bg-green-500"}`}
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
-                </section>
-              </Link>
-            )}
+                ) : (
+                  <p className="text-sm text-zinc-500 text-center py-4">No solved problems yet</p>
+                )}
+              </section>
 
-            {/* Dashboard Stats (Difficulty, Company, Topics) */}
-            <DashboardStats
-              questions={questionsState.questions}
-              progressMap={progress.progressMap}
-            />
+              <section className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">Company Progress</h3>
+                {topCompanies.length > 0 ? (
+                  <div className="space-y-3">
+                    {topCompanies.map((company) => {
+                      const percent = company.total > 0 ? Math.round((company.solved / company.total) * 100) : 0;
+                      return (
+                        <Link
+                          key={company.name}
+                          href={`/problems`}
+                          className="block rounded-lg border border-zinc-800 bg-zinc-950 p-3 transition-colors hover:bg-zinc-800/50"
+                        >
+                          <div className="flex items-center justify-between text-sm mb-1.5">
+                            <span className="font-medium text-zinc-200 truncate">{company.name}</span>
+                            <span className="text-xs text-zinc-400 shrink-0 ml-2">{company.solved} solved</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+                            <div className="h-full rounded-full bg-green-500 transition-all duration-500" style={{ width: `${percent}%` }} />
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : stats.companyStats.length > 0 ? (
+                  <p className="text-sm text-zinc-500 text-center py-4">Start solving problems from different companies</p>
+                ) : (
+                  <p className="text-sm text-zinc-500 text-center py-4">No company data available</p>
+                )}
+              </section>
+            </div>
 
-            {/* Activity Heatmap */}
-            <Heatmap uid={auth.user?.uid} />
-
-            {/* Quick Actions */}
-            <section className="grid gap-4 md:grid-cols-3">
+            {/* Row 5: Quick Actions */}
+            <section className="grid gap-3 grid-cols-2 sm:grid-cols-4">
               {quickActions.map((action) => {
                 const Icon = action.icon;
-                const content = (
-                  <div className="flex h-full flex-col rounded-xl border border-zinc-800 bg-zinc-900 p-5 transition-colors hover:border-zinc-700">
-                    <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-zinc-800 text-green-300">
+                return (
+                  <Link
+                    key={action.title}
+                    href={action.href}
+                    className="flex flex-col items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 p-4 text-center transition-colors hover:border-zinc-700 hover:bg-zinc-800/50"
+                  >
+                    <div className="flex size-10 items-center justify-center rounded-lg bg-green-500/10 text-green-400">
                       <Icon className="size-5" />
                     </div>
-                    <h2 className="text-base font-semibold text-white">{action.title}</h2>
-                    <p className="mt-2 flex-1 text-sm text-zinc-400">{action.description}</p>
-                    <div className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-green-300">
-                      {action.enabled ? "Go to workspace" : "Coming later"}
-                      {action.enabled ? (
-                        <ArrowRight className="size-4" />
-                      ) : (
-                        <RotateCcw className="size-4" />
-                      )}
+                    <div>
+                      <div className="text-sm font-medium text-white">{action.title}</div>
+                      <div className="text-xs text-zinc-500 mt-0.5">{action.description}</div>
                     </div>
-                  </div>
-                );
-
-                if (!action.enabled) {
-                  return (
-                    <div key={action.href} aria-disabled="true" className="opacity-70">
-                      {content}
-                    </div>
-                  );
-                }
-
-                return (
-                  <Link key={action.href} href={action.href}>
-                    {content}
                   </Link>
                 );
               })}

@@ -14,6 +14,7 @@ interface DonutChartProps {
   strokeWidth?: number;
   centerLabel?: string;
   centerSubLabel?: string;
+  onSegmentClick?: (segment: DonutSegment) => void;
 }
 
 const DonutChart = ({
@@ -22,6 +23,7 @@ const DonutChart = ({
   strokeWidth = 28,
   centerLabel,
   centerSubLabel,
+  onSegmentClick,
 }: DonutChartProps) => {
   const [animated, setAnimated] = useState(false);
 
@@ -91,8 +93,9 @@ const DonutChart = ({
             strokeDasharray={`${dashLength} ${circumference - dashLength}`}
             strokeDashoffset={animated ? -segOffset : circumference}
             strokeLinecap="butt"
-            className="transition-all duration-1000 ease-out"
+            className={`transition-all duration-1000 ease-out ${onSegmentClick ? "cursor-pointer" : ""}`}
             transform={`rotate(-90 ${center} ${center})`}
+            onClick={() => onSegmentClick?.(segment)}
           />
         );
       })}
