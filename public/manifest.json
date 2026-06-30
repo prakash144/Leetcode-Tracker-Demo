@@ -1,0 +1,17 @@
+{
+  "name": "Interview Tracly",
+  "short_name": "InterviewTracly",
+  "description": "Track your journey. Crack your dream company. 🚀",
+  "start_url": "/Interview-Tracly/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#22c55e",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

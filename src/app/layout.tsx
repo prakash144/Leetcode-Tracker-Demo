@@ -26,6 +26,20 @@ export const metadata: Metadata = {
         type: "website",
         url: "/",
         siteName: "Interview Tracly",
+        images: [
+            {
+                url: "/icon.svg",
+                width: 100,
+                height: 100,
+                alt: "Interview Tracly",
+            },
+        ],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Interview Tracly",
+        description: "Track your journey. Crack your dream company. 🚀",
+        images: ["/icon.svg"],
     },
 };
 
@@ -37,7 +51,8 @@ export default function RootLayout({
     return (
         <html lang="en">
         <head>
-            {/* Removed default Next.js icons and meta */}
+            <link rel="manifest" href="/manifest.json" />
+            <meta name="theme-color" content="#22c55e" />
         </head>
         <body
             className={`${geistSans.variable} ${geistMono.variable} antialiased`} // Apply custom fonts globally
