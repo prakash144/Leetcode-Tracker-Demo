@@ -213,7 +213,7 @@ const DashboardPage = () => {
                       <span>{solvedPercent}%</span>
                     </div>
                     <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-500" style={{ width: `${solvedPercent}%` }} />
+                      <div className="h-full rounded-full bg-gradient-to-r from-success to-success/60 transition-all duration-500" style={{ width: `${solvedPercent}%` }} />
                     </div>
                   </div>
                 )}

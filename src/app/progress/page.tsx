@@ -310,7 +310,7 @@ const ProgressPage = () => {
                     placeholder="Search problems..."
                     value={search}
                     onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                    className="w-full rounded-lg border border-border bg-secondary pl-8 pr-8 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border bg-secondary pl-8 pr-8 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-success/50 focus:outline-none"
                   />
                   {search && (
                     <button
@@ -326,7 +326,7 @@ const ProgressPage = () => {
                 <select
                   value={difficultyFilter}
                   onChange={(e) => { setDifficultyFilter(e.target.value); setCurrentPage(1); }}
-                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-green-500 focus:outline-none"
+                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-success/50 focus:outline-none"
                 >
                   <option value="all">All Difficulties</option>
                   <option value="Easy">Easy</option>
@@ -336,7 +336,7 @@ const ProgressPage = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-green-500 focus:outline-none"
+                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground focus:border-success/50 focus:outline-none"
                 >
                   <option value="all">All Status</option>
                   <option value="solved">Solved</option>
@@ -346,7 +346,7 @@ const ProgressPage = () => {
                 <select
                   value={companyFilter}
                   onChange={(e) => { setCompanyFilter(e.target.value); setCurrentPage(1); }}
-                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground max-w-[140px] focus:border-green-500 focus:outline-none"
+                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground max-w-[140px] focus:border-success/50 focus:outline-none"
                 >
                   <option value="all">All Companies</option>
                   {companies.map((c) => (<option key={c} value={c}>{c}</option>))}
@@ -354,7 +354,7 @@ const ProgressPage = () => {
                 <select
                   value={topicFilter}
                   onChange={(e) => { setTopicFilter(e.target.value); setCurrentPage(1); }}
-                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground max-w-[140px] focus:border-green-500 focus:outline-none"
+                  className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-foreground max-w-[140px] focus:border-success/50 focus:outline-none"
                 >
                   <option value="all">All Topics</option>
                   {topics.slice(0, 30).map((t) => (<option key={t} value={t}>{t}</option>))}
@@ -488,7 +488,7 @@ const ProgressPage = () => {
                       return (
                         <div key={month} className="flex-1 flex flex-col items-center gap-1">
                           <span className="text-[10px] text-muted-foreground">{count}</span>
-                          <div className="w-full rounded-sm bg-green-500/60 transition-all duration-500" style={{ height: `${Math.max(height, 4)}%` }} />
+                          <div className="w-full rounded-sm bg-success/60 transition-all duration-500" style={{ height: `${Math.max(height, 4)}%` }} />
                           <span className="text-[9px] text-muted-foreground truncate w-full text-center">{month.split("-")[1]}</span>
                         </div>
                       );

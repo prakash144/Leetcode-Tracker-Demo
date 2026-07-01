@@ -210,7 +210,7 @@ const AddToListDialog = ({
                   size="sm"
                   disabled={!newName.trim()}
                   onClick={handleCreateNew}
-                  className="bg-success text-primary-foreground hover:bg-green-400 h-9 px-4 text-xs font-semibold shrink-0 rounded-lg"
+                  className="bg-success text-primary-foreground hover:bg-success/90 h-9 px-4 text-xs font-semibold shrink-0 rounded-lg"
                 >
                   Create
                 </Button>

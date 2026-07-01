@@ -72,7 +72,7 @@ const MyListsPage = () => {
             <Button
               type="button"
               onClick={() => setShowCreate(true)}
-              className="bg-success text-primary-foreground hover:bg-green-400"
+              className="bg-success text-primary-foreground hover:bg-success/90"
             >
               <Plus className="size-4" />
               New List
@@ -114,7 +114,7 @@ const MyListsPage = () => {
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-success/50 focus:outline-none"
                     autoFocus
                   />
                   <input
@@ -122,14 +122,14 @@ const MyListsPage = () => {
                     placeholder="Description (optional)"
                     value={newDesc}
                     onChange={(e) => setNewDesc(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-success/50 focus:outline-none"
                   />
                   <Button
                     type="button"
                     size="sm"
                     disabled={!newName.trim()}
                     onClick={handleCreate}
-                    className="bg-success text-primary-foreground hover:bg-green-400"
+className="bg-success text-primary-foreground hover:bg-success/90"
                   >
                     <ListPlus className="size-4" />
                     Create List
@@ -161,14 +161,14 @@ const MyListsPage = () => {
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleRename(list.id)}
-                            className="flex-1 rounded-md border border-border bg-secondary px-2 py-1 text-sm text-foreground focus:border-green-500 focus:outline-none"
+                            className="flex-1 rounded-md border border-border bg-secondary px-2 py-1 text-sm text-foreground focus:border-success/50 focus:outline-none"
                             autoFocus
                           />
                           <Button
                             type="button"
                             size="sm"
                             onClick={() => handleRename(list.id)}
-                            className="bg-success text-primary-foreground h-7 px-2 text-xs hover:bg-green-400"
+                            className="bg-success text-primary-foreground h-7 px-2 text-xs hover:bg-success/90"
                           >
                             Save
                           </Button>

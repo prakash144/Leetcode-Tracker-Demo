@@ -24,7 +24,7 @@ export default function RootError({
         <button
           type="button"
           onClick={reset}
-          className="rounded-lg bg-success px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-green-400"
+          className="rounded-lg bg-success px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-success/90"
         >
           Try again
         </button>

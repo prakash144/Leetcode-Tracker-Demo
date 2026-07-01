@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     },
 };
 
-const FLASH_SCRIPT = `(function(){try{var m=localStorage.getItem("interview-tracly-theme");if(!m||(m!=="dark"&&m!=="light"&&m!=="system"))m="system";var d=m==="dark"||(m==="system"&&window.matchMedia("(prefers-color-scheme:dark)").matches);document.documentElement.classList.toggle("dark",d)}catch(e){document.documentElement.classList.add("dark")}})()`;
+const FLASH_SCRIPT = `(function(){try{var m=localStorage.getItem("interview-tracly-theme");if(!m||(m!=="dark"&&m!=="light"&&m!=="system"))m="system";var d=m==="dark"||(m==="system"&&window.matchMedia("(prefers-color-scheme:dark)").matches);document.documentElement.classList.toggle("dark",d);var a=localStorage.getItem("interview-tracly-accent");if(a)document.documentElement.style.setProperty("--accent-color",a)}catch(e){document.documentElement.classList.add("dark")}})()`;
 
 export default function RootLayout({
                                        children,

@@ -11,7 +11,7 @@ const PageHeader = ({ title, description, eyebrow, actions }: PageHeaderProps) =
   <section className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
     <div className="min-w-0">
       {eyebrow && (
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-green-400">
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-success">
           {eyebrow}
         </div>
       )}

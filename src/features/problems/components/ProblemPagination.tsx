@@ -40,7 +40,7 @@ const ProblemPagination = ({
           <select
             value={pageSize}
             onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="h-9 rounded-md border border-border bg-secondary px-2 text-foreground outline-none focus:border-green-500"
+            className="h-9 rounded-md border border-border bg-secondary px-2 text-foreground outline-none focus:border-success/50"
           >
             {PAGE_SIZE_OPTIONS.map((option) => (
               <option key={option} value={option}>
