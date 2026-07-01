@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
 interface UserMenuProps {
   user?: User | null;
   loading?: boolean;
@@ -23,6 +24,13 @@ interface UserMenuProps {
 
 const getFallback = (user?: User | null) =>
   user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U";
+
+const getFirstName = (user?: User | null) => {
+  if (!user) return "Account";
+  if (user.displayName) return user.displayName.split(" ")[0];
+  if (user.email) return user.email.split("@")[0];
+  return "Account";
+};
 
 const UserMenu = ({
   user,
@@ -39,11 +47,11 @@ const UserMenu = ({
         size="sm"
         disabled={loading || !isConfigured}
         onClick={onLogin}
-        className="border-border bg-card text-card-foreground hover:bg-accent hover:text-foreground"
+        className="h-8 border-border bg-card/50 text-card-foreground hover:bg-accent hover:text-foreground text-xs gap-1.5 px-2.5"
         title={!isConfigured ? "Firebase Auth is not configured." : "Sign in with Google"}
         aria-label={!isConfigured ? "Firebase Auth is not configured. Sign in unavailable." : "Sign in with Google"}
       >
-        <LogIn className="size-4" />
+        <LogIn className="size-3.5" />
         {loading ? "Checking..." : "Sign in"}
       </Button>
     );
@@ -55,32 +63,46 @@ const UserMenu = ({
         <Button
           type="button"
           variant="ghost"
-          className="h-10 gap-3 px-2 text-left text-card-foreground hover:bg-card hover:text-foreground"
+          className="h-8 gap-2 px-1.5 text-left text-card-foreground hover:bg-accent/50 hover:text-foreground rounded-md"
           aria-label="Open user menu"
         >
           <Avatar className="size-8 border border-border">
             {user.photoURL && (
-              <AvatarImage src={user.photoURL} alt={user.displayName ?? "User"} />
+              <AvatarImage src={user.photoURL} alt={user.displayName ?? "User"} referrerPolicy="no-referrer" />
             )}
             <AvatarFallback className="bg-secondary text-xs text-foreground">
               {getFallback(user).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden max-w-40 truncate text-sm md:inline">
-            {user.displayName || user.email || "Account"}
+          <span className="hidden max-w-20 truncate text-sm sm:inline">
+            {getFirstName(user)}
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 border-border bg-card text-foreground">
-        <DropdownMenuLabel>
-          <div className="truncate text-sm font-medium">
-            {user.displayName || "Signed in"}
+      <DropdownMenuContent align="end" className="w-56 border-border bg-card text-foreground shadow-md">
+        <DropdownMenuLabel className="px-3 py-2.5">
+          <div className="flex items-center gap-3">
+            <Avatar className="size-10 border border-border">
+              {user.photoURL && (
+                <AvatarImage src={user.photoURL} alt={user.displayName ?? "User"} referrerPolicy="no-referrer" />
+              )}
+              <AvatarFallback className="bg-secondary text-sm text-foreground">
+                {getFallback(user).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-medium text-foreground">
+                {user.displayName || "Signed in"}
+              </div>
+              {user.email && (
+                <div className="truncate text-xs font-normal text-muted-foreground">
+                  {user.email}
+                </div>
+              )}
+            </div>
           </div>
-          {user.email && (
-            <div className="truncate text-xs font-normal text-muted-foreground">{user.email}</div>
-          )}
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-secondary" />
+        <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuItem asChild className="cursor-pointer hover:bg-accent">
           <Link href="/settings" className="flex items-center gap-3">
             <UserIcon className="size-4" />
@@ -99,11 +121,11 @@ const UserMenu = ({
             Settings
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-secondary" />
+        <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuItem
           disabled={loading}
           onClick={onLogout}
-          className="cursor-pointer hover:bg-accent"
+          className="cursor-pointer hover:bg-accent text-muted-foreground"
         >
           <LogOut className="size-4" />
           Sign Out

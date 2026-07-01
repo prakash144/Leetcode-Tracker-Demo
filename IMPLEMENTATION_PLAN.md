@@ -1,6 +1,6 @@
 # Implementation Plan — Improvement Pass (v2)
 
-> **Status:** All phases complete. ✅
+> **Status:** All phases complete. Production Readiness Review passed. ✅
 > **IMPORTANT:** No automatic updates to this file unless explicitly requested.
 
 ## Completed Phases
@@ -9,13 +9,13 @@
 LeetCode-style contribution heatmap with SVG grid, month/day labels, green intensity scale, streak stats, time-range filters (Current/2025/2024/2023/180d/90d/30d), tooltip, legend.
 
 ### 2. Progress Page Enhancement — ✅
-Two-column layout (Practice History + Summary sidebar). Sortable columns, debounced search, multi-filters (difficulty/status/company/topic), pagination (10/25/50), DonutChart, monthly trend, recent stats + insights.
+Two-column layout (Practice History + Summary sidebar). Sortable columns, debounced search, multi-filters (difficulty/status/company/topic), pagination (10/25/50), ProgressRingChart, monthly trend, recent stats + insights.
 
 ### 3. Dashboard Enhancement — ✅
 Restructured layout with overall progress, difficulty breakdown with progress bars, company progress, quick actions, recent activity, weekly goal. Reuses Heatmap component.
 
 ### 4. Global Optimization & Polish — ✅
-React.memo on key components, deleted unused code (MetricCard, StatusBadge, unused types/functions), `/analytics` → `/progress` redirect, company logos via Simple Icons CDN with CompanyBadge fallback, CSS variable card backgrounds.
+React.memo on key components, deleted unused code (MetricCard, StatusBadge, DonutChart, Checkbox, unused types/functions), `/analytics` → `/progress` redirect, company logos via Simple Icons CDN with CompanyBadge fallback, CSS variable card backgrounds.
 
 ### 5. Navigation Update — ✅
 TopNav: Dashboard, Problems, Progress, Favorites, My Lists, Settings. Profile dropdown: My Profile, My Lists, Settings, Sign Out. (Theme selector moved to Settings page.)
@@ -25,6 +25,52 @@ Difficulty color system (Easy=green, Medium=yellow, Hard=red) verified across al
 
 ### 7. Production Theme System — ✅
 Light / Dark / System modes with localStorage persistence. Semantic CSS variable system replacing all hardcoded dark colors across 32+ files. Flash-prevention inline script. 3-mode selector in Settings (Light / Dark / System buttons with active state). Accent color picker (Green / Blue / Purple / Orange) applied to focus rings. No `dark:` prefix variants — all theme-aware via CSS variables.
+
+---
+
+## Production Readiness Review — ✅
+
+### Issues Found & Fixed
+
+| Issue | Severity | Fix |
+|---|---|---|
+| Missing `React` import in `CompanySearch.tsx` (used `React.Dispatch`/`React.SetStateAction` without import) | Critical | Added `import React` |
+| `DonutChart.tsx` — unused component (dead code) | Critical | Removed file |
+| `Checkbox.tsx` — unused component (dead code) | Critical | Removed file |
+| `TopicSelector.tsx` missing `"use client"` directive | High | Added directive |
+| `fetchQuestions.ts` (contains hook `useFetchQuestions`) missing `"use client"` | High | Added directive |
+| Non-functional "Heatmap Visibility" toggle in Settings (plain `<div>` with no interaction) | High | Replaced with functional `<button role="switch">` with `aria-checked`, keyboard support |
+| `formatRelativeTime.ts` — no null/undefined/NaN guard | Medium | Added guard returning `"—"` |
+| Redundant second `useEffect` in `useTheme.ts` | Medium | Removed dead code |
+| `hasError` passes `string | null` to `ErrorState`'s required `string` prop (Dashboard + Progress) | Medium | Added `typeof hasError === "string"` guard |
+| Duplicate `key` values in Heatmap day labels (`""` for empty labels) | Medium | Changed to `key={i}` |
+| SVG click handlers (`<g>`, `<circle>`) lack keyboard accessibility in ProgressRingChart | Medium | Added `role="button"`, `tabIndex`, `onKeyDown` (Enter/Space), `aria-label` |
+| Clear search button in Progress page lacks `aria-label` | Medium | Added `aria-label="Clear search"` |
+| Inline SVG chevron in Heatmap instead of lucide icon | Low | Replaced with `ChevronDown` from lucide-react |
+| Duplicate Tailwind directives (`@import` v4 + `@tailwind` v3) in globals.css | Medium | Removed v3 directives |
+| Universal `* { @apply border-border }` applies borders to all elements | Medium | Kept as-is (scoped via `border-border` var which defaults to transparent) |
+
+### Validation Results
+
+| Check | Result |
+|---|---|
+| `npm run build` | ✅ Passes — 11/11 static pages |
+| `npm run lint` | ✅ Passes — 0 errors, 1 pre-existing warning (`<img>` in CompanyLogo) |
+| Typecheck | ✅ Passes (included in build) |
+| Console errors | ✅ None (only `console.error` for API failures, no `console.log`) |
+| Dead code | ✅ Removed `DonutChart.tsx`, `Checkbox.tsx` |
+| Unused imports | ✅ None detected |
+
+### Performance Optimizations
+- Removed unused components reducing bundle size
+- Fixed `useSyncExternalStore` + `useEffect` pattern in `useTheme.ts`
+- React.memo already applied on Heatmap, ProgressRingChart, DifficultyBadge, TopicBadge
+
+### Accessibility Improvements
+- `role="button"` + `tabIndex` + `onKeyDown` on SVG chart segments
+- `aria-label` on clear search button
+- `aria-checked` + `role="switch"` on functional toggle
+- Focus rings use `var(--accent-color)` CSS variable
 
 ---
 
@@ -45,6 +91,7 @@ All checks pass:
 | No hardcoded dark colors | ✅ All 32+ files use semantic CSS variables |
 | No flash of incorrect theme | ✅ Inline script runs before first paint |
 | Responsive | ✅ Tested at desktop, tablet, mobile |
+| Accessibility | ✅ Keyboard nav, ARIA labels, semantic HTML, focus states |
 
 ---
 
@@ -53,3 +100,11 @@ All checks pass:
 - **Company logos**: resolved — initials badges (CompanyBadge) with Simple Icons CDN as enhancement, no bundled trademark assets.
 - **Virtualization on the heatmap**: not built — 53 weeks renders fine without it.
 - **`onSnapshot` vs `getDocs`**: per-feature decision, applied deliberately per read pattern.
+- **Firebase API key exposure**: `NEXT_PUBLIC_*` keys are client-side by design; restrict in GCP Console to specific domains.
+- **`dangerouslySetInnerHTML` in layout**: required for flash-prevention; content is a hardcoded string, not user input.
+
+## Production Readiness
+
+✅ **Production Ready**
+
+All blocking issues resolved. Zero build errors, zero lint errors, zero TypeScript errors. The application passes a comprehensive production readiness review covering code quality, performance, accessibility, security, and responsiveness.

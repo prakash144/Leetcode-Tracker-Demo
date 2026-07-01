@@ -2,9 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { memo, useState } from "react";
 import type { User } from "firebase/auth";
-import { BarChart3, Bookmark, FolderKanban, LayoutDashboard, ListChecks, Settings } from "lucide-react";
+import {
+  BarChart3,
+  Bookmark,
+  FolderKanban,
+  LayoutDashboard,
+  ListChecks,
+  Menu,
+  Moon,
+  Search,
+  Sun,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useTheme } from "@/hooks/useTheme";
+import { Logo } from "@/components/ui/logo";
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import UserMenu from "./UserMenu";
 
 interface TopNavProps {
@@ -15,44 +31,105 @@ interface TopNavProps {
   onLogout?: () => void;
 }
 
-const navigationItems = [
-  {
-    label: "Dashboard",
-    href: "/",
-    icon: LayoutDashboard,
-    enabled: true,
-  },
-  {
-    label: "Problems",
-    href: "/problems",
-    icon: ListChecks,
-    enabled: true,
-  },
-  {
-    label: "Progress",
-    href: "/progress",
-    icon: BarChart3,
-    enabled: true,
-  },
-  {
-    label: "Favorites",
-    href: "/favorites",
-    icon: Bookmark,
-    enabled: true,
-  },
-  {
-    label: "My Lists",
-    href: "/my-lists",
-    icon: FolderKanban,
-    enabled: true,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: Settings,
-    enabled: true,
-  },
-];
+const navItems = [
+  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Problems", href: "/problems", icon: ListChecks },
+  { label: "Progress", href: "/progress", icon: BarChart3 },
+  { label: "Favorites", href: "/favorites", icon: Bookmark },
+  { label: "My Lists", href: "/my-lists", icon: FolderKanban },
+] as const;
+
+const NavLink = memo(function NavLink({
+  href,
+  label,
+  icon: Icon,
+  isActive,
+}: {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  isActive: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "relative inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors",
+        isActive
+          ? "text-foreground"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+      aria-current={isActive ? "page" : undefined}
+    >
+      {isActive && (
+        <span className="absolute inset-0 rounded-md bg-accent/50" />
+      )}
+      <Icon className="relative z-10 size-4" />
+      <span className="relative z-10 whitespace-nowrap">{label}</span>
+    </Link>
+  );
+});
+
+function ThemeToggle() {
+  const { isDark, toggleTheme } = useTheme();
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      onClick={toggleTheme}
+      className="size-8 text-muted-foreground hover:text-foreground"
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+    </Button>
+  );
+}
+
+function SearchInput() {
+  return (
+    <div className="relative hidden sm:block">
+      <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="search"
+        placeholder="Search"
+        className="h-8 w-40 rounded-md border-border bg-secondary/50 pl-8 text-xs placeholder:text-muted-foreground/60 focus-visible:w-56 transition-all duration-200 lg:w-48 lg:focus-visible:w-64"
+        aria-label="Search problems, companies, topics"
+      />
+    </div>
+  );
+}
+
+function MobileNavItem({
+  href,
+  label,
+  icon: Icon,
+  isActive,
+}: {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  isActive: boolean;
+}) {
+  return (
+    <SheetClose asChild>
+      <Link
+        href={href}
+        className={cn(
+          "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+          isActive
+            ? "bg-accent/50 text-foreground"
+            : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
+        )}
+        aria-current={isActive ? "page" : undefined}
+      >
+        <Icon className="size-4" />
+        {label}
+      </Link>
+    </SheetClose>
+  );
+}
 
 const TopNav = ({
   user,
@@ -62,24 +139,60 @@ const TopNav = ({
   onLogout,
 }: TopNavProps) => {
   const pathname = usePathname();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="flex min-w-0 items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-base" role="img" aria-label="Interview Tracly">
-              🎯
-            </span>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-foreground">
-                Interview Tracly
-              </div>
-              <div className="hidden text-xs text-muted-foreground sm:block">
-                Master Coding Interviews
-              </div>
-            </div>
-          </Link>
+    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto flex h-[50px] max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
+        {/* Left: Brand */}
+        <Logo showTagline={false} />
+
+        {/* Center: Desktop Nav */}
+        <nav
+          aria-label="Primary navigation"
+          className="hidden md:flex items-center gap-0.5"
+        >
+          {navItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              label={item.label}
+              icon={item.icon}
+              isActive={pathname === item.href}
+            />
+          ))}
+        </nav>
+
+        {/* Right: Utilities */}
+        <div className="flex items-center gap-1">
+          <SearchInput />
+
+          <ThemeToggle />
+
+          {/* Notifications placeholder */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="hidden sm:inline-flex size-8 text-muted-foreground hover:text-foreground"
+            aria-label="Notifications"
+            title="Notifications — coming soon"
+            disabled
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="size-4"
+              aria-hidden="true"
+            >
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+          </Button>
 
           <UserMenu
             user={user}
@@ -88,47 +201,38 @@ const TopNav = ({
             onLogin={onLogin}
             onLogout={onLogout}
           />
-        </div>
 
-        <nav aria-label="Primary navigation" className="flex gap-2 overflow-x-auto">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            const className = cn(
-              "inline-flex h-9 shrink-0 items-center gap-2 rounded-md border px-3 text-sm transition-colors",
-              isActive
-                ? "border-green-500/40 bg-green-500/10 text-green-300"
-                : "border-transparent text-muted-foreground hover:border-border hover:bg-card hover:text-foreground",
-              !item.enabled && "cursor-not-allowed opacity-50 hover:border-transparent hover:bg-transparent hover:text-muted-foreground"
-            );
-
-            if (!item.enabled) {
-              return (
-                <span
-                  key={item.href}
-                  className={className}
-                  aria-disabled="true"
-                  title={`${item.label} will be added in a later phase`}
-                >
-                  <Icon className="size-4" />
-                  {item.label}
-                </span>
-              );
-            }
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={className}
-                aria-current={isActive ? "page" : undefined}
+          {/* Mobile: Hamburger + Sheet drawer */}
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="md:hidden size-8 text-muted-foreground hover:text-foreground"
+                aria-label="Open navigation menu"
               >
-                <Icon className="size-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+                <Menu className="size-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-4">
+              <div className="flex flex-col gap-6 pt-8">
+                <Logo showTagline={false} />
+                <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
+                  {navItems.map((item) => (
+                    <MobileNavItem
+                      key={item.href}
+                      href={item.href}
+                      label={item.label}
+                      icon={item.icon}
+                      isActive={pathname === item.href}
+                    />
+                  ))}
+                </nav>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

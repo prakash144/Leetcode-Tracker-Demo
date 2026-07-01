@@ -154,14 +154,7 @@ const DashboardPage = () => {
   }, [router]);
 
   return (
-    <AppShell
-      user={auth.user}
-      authLoading={auth.loading}
-      isAuthConfigured={auth.isConfigured}
-      onLogin={auth.login}
-      onLogout={auth.logout}
-      footer={<Footer />}
-    >
+    <AppShell footer={<Footer />}>
       <PageHeader
         eyebrow="Dashboard"
         title="Progress Overview"
@@ -181,7 +174,7 @@ const DashboardPage = () => {
                   {auth.user ? (
                     <>
                       <Avatar className="size-14 border-2 border-success/30 shrink-0">
-                        {auth.user.photoURL && <AvatarImage src={auth.user.photoURL} alt={auth.user.displayName ?? "User"} />}
+                        {auth.user.photoURL && <AvatarImage src={auth.user.photoURL} alt={auth.user.displayName ?? "User"} referrerPolicy="no-referrer" />}
                         <AvatarFallback className="bg-secondary text-lg text-success">
                           {(auth.user.displayName || auth.user.email || "U").charAt(0).toUpperCase()}
                         </AvatarFallback>

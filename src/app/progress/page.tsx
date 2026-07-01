@@ -281,14 +281,7 @@ const ProgressPage = () => {
   };
 
   return (
-    <AppShell
-      user={auth.user}
-      authLoading={auth.loading}
-      isAuthConfigured={auth.isConfigured}
-      onLogin={auth.login}
-      onLogout={auth.logout}
-      footer={<Footer />}
-    >
+    <AppShell footer={<Footer />}>
       <PageHeader
         eyebrow="Progress"
         title="Practice History"

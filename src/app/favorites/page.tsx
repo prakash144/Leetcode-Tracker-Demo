@@ -8,17 +8,9 @@ import { useProblemWorkspaceData } from "@/features/problems/hooks/useProblemWor
 
 const FavoritesPage = () => {
   const workspace = useProblemWorkspaceData();
-  const { auth } = workspace;
 
   return (
-    <AppShell
-      user={auth.user}
-      authLoading={auth.loading}
-      isAuthConfigured={auth.isConfigured}
-      onLogin={auth.login}
-      onLogout={auth.logout}
-      footer={<Footer />}
-    >
+    <AppShell footer={<Footer />}>
       <PageHeader
         eyebrow="Favorites"
         title="Bookmarked Problems"

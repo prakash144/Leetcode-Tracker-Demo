@@ -5,6 +5,18 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 type ThemeMode = "light" | "dark" | "system";
 
 const STORAGE_KEY = "interview-tracly-theme";
+const ACCENT_KEY = "interview-tracly-accent";
+
+function getStoredAccent(): string {
+    if (typeof window === "undefined") return "#22c55e";
+    return localStorage.getItem(ACCENT_KEY) || "#22c55e";
+}
+
+function applyAccent() {
+    if (typeof window === "undefined") return;
+    const accent = getStoredAccent();
+    document.documentElement.style.setProperty("--accent-color", accent);
+}
 
 function getStoredMode(): ThemeMode {
     if (typeof window === "undefined") return "system";
@@ -49,6 +61,7 @@ export function useTheme() {
 
     useEffect(() => {
         applyTheme(mode);
+        applyAccent();
     }, [mode]);
 
     const setMode = useCallback((m: ThemeMode) => {

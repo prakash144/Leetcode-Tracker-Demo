@@ -62,14 +62,7 @@ const MyListsPage = () => {
   };
 
   return (
-    <AppShell
-      user={auth.user}
-      authLoading={auth.loading}
-      isAuthConfigured={auth.isConfigured}
-      onLogin={auth.login}
-      onLogout={auth.logout}
-      footer={<Footer />}
-    >
+    <AppShell footer={<Footer />}>
       <PageHeader
         eyebrow="My Lists"
         title="Problem Collections"

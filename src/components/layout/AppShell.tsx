@@ -1,39 +1,35 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { User } from "firebase/auth";
+import { useAuthContext } from "@/contexts/AuthContext";
+import AuthUnavailable from "@/components/states/AuthUnavailable";
 import TopNav from "./TopNav";
 
 interface AppShellProps {
   children: ReactNode;
   footer?: ReactNode;
-  user?: User | null;
-  authLoading?: boolean;
-  isAuthConfigured?: boolean;
-  onLogin?: () => void;
-  onLogout?: () => void;
 }
 
-const AppShell = ({
-  children,
-  footer,
-  user,
-  authLoading = false,
-  isAuthConfigured = false,
-  onLogin,
-  onLogout,
-}: AppShellProps) => (
-  <div className="min-h-screen bg-background text-foreground">
-    <TopNav
-      user={user}
-      authLoading={authLoading}
-      isAuthConfigured={isAuthConfigured}
-      onLogin={onLogin}
-      onLogout={onLogout}
-    />
-    <main>{children}</main>
-    {footer}
-  </div>
-);
+const AppShell = ({ children, footer }: AppShellProps) => {
+  const { user, loading, isConfigured, error, login, logout } = useAuthContext();
+
+  if (!isConfigured || error) {
+    return <AuthUnavailable error={error ?? undefined} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <TopNav
+        user={user}
+        authLoading={loading}
+        isAuthConfigured={isConfigured}
+        onLogin={login}
+        onLogout={logout}
+      />
+      <main>{children}</main>
+      {footer}
+    </div>
+  );
+};
 
 export default AppShell;
