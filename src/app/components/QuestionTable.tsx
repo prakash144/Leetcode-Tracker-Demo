@@ -155,10 +155,10 @@ const QuestionTable = ({
             <table className="w-full text-sm text-left text-foreground" aria-label="Problems table">
                 <thead className="sticky top-0 z-10 text-xs uppercase bg-card text-muted-foreground border-b border-border">
                 <tr>
-                    <th className="px-4 py-3 w-12">#</th>
-                    <th className="px-4 py-3">Title</th>
+                    <th className="px-4 py-3">#</th>
+                    <th className="px-4 py-3">Problem</th>
                     <th
-                        className="px-4 py-3 w-24 cursor-pointer"
+                        className="px-4 py-3 cursor-pointer"
                         onClick={() => handleSort("acceptanceRate")}
                         aria-sort={sortBy === "acceptanceRate" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
                     >
@@ -169,9 +169,9 @@ const QuestionTable = ({
                                 </span>
                         )}
                     </th>
-                    <th className="px-4 py-3 w-28">Difficulty</th>
+                    <th className="px-4 py-3">Difficulty</th>
                     <th
-                        className="px-4 py-3 w-20 cursor-pointer"
+                        className="px-4 py-3 cursor-pointer"
                         onClick={() => handleSort("frequency")}
                         aria-sort={sortBy === "frequency" ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
                     >
@@ -183,12 +183,12 @@ const QuestionTable = ({
                         )}
                     </th>
                     <th className="px-4 py-3">Topic</th>
-                    <th className="px-4 py-3 w-16 text-center">Status</th>
-                    <th className="px-4 py-3 w-20 text-center">Attempted</th>
-                    <th className="px-4 py-3 w-16 text-center"><Star className="size-4 inline-block text-yellow-400" /></th>
-                    <th className="px-4 py-3 w-20 text-center">Revision</th>
-                    <th className="px-4 py-3 w-20 text-center">Notes</th>
-                    {customLists && <th className="px-4 py-3 w-16 text-center">List</th>}
+                    <th className="px-4 py-3 text-center">Status</th>
+                    <th className="px-4 py-3 text-center">Attempted</th>
+                    <th className="px-4 py-3 text-center"><Star className="size-4 inline-block text-yellow-400" /></th>
+                    <th className="px-4 py-3 text-center">Revision</th>
+                    <th className="px-4 py-3 text-center">Notes</th>
+                    {customLists && <th className="px-4 py-3 text-center">List</th>}
                 </tr>
                 </thead>
                 <tbody>
@@ -196,30 +196,28 @@ const QuestionTable = ({
                     const progress = progressMap[q.problemId];
 
                     return (
-                    <tr key={`${q.company}-${q.list}-${q.problemId}`} className="bg-card border-b border-border transition-all duration-150 hover:bg-accent/40 [&:last-child]:border-b-0">
-                        <td className="px-4 py-3 text-muted-foreground text-center">{range.from + index}</td>
-                        <td className="px-4 py-3 font-medium max-w-0">
-                            <a href={q.link} target="_blank" rel="noopener noreferrer" title={q.title} className="text-foreground hover:text-info transition-colors truncate block">
+                    <tr key={`${q.company}-${q.list}-${q.problemId}`} className="bg-secondary border-b border-border transition-colors duration-150 hover:bg-accent/40">
+                        <td className="px-4 py-3 text-muted-foreground">{range.from + index}</td>
+                        <td className="px-4 py-3 font-medium">
+                            <a href={q.link} target="_blank" rel="noopener noreferrer" title={q.title} className="text-foreground hover:text-info transition-colors">
                                 {q.title}
                             </a>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">
+                        <td className="px-4 py-3">
                             {typeof q.acceptanceRate === "number" ? q.acceptanceRate.toFixed(2) : q.acceptanceRate}
                         </td>
                         <td className="px-4 py-3">
                             <DifficultyBadge difficulty={q.difficulty} />
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">{q.frequency}</td>
+                        <td className="px-4 py-3">{q.frequency}</td>
                         <td className="px-4 py-3">
-                            <div className="flex flex-wrap gap-1">
-                                {q.topicTag.split(",").map((topic) => {
-                                    const trimmed = topic.trim();
-                                    const isSelected = selectedTopics.includes(trimmed);
-                                    return (
-                                        <TopicBadge key={trimmed} topic={trimmed} active={isSelected} />
-                                    );
-                                })}
-                            </div>
+                            {q.topicTag.split(",").map((topic) => {
+                                const trimmed = topic.trim();
+                                const isSelected = selectedTopics.includes(trimmed);
+                                return (
+                                    <TopicBadge key={trimmed} topic={trimmed} active={isSelected} className="mr-1 mb-1" />
+                                );
+                            })}
                         </td>
                         <td className="px-4 py-3 text-center">
                             <input
@@ -248,7 +246,7 @@ const QuestionTable = ({
                                 title={progress?.bookmarked ? "Remove from favorites" : "Add to favorites"}
                                 aria-label={progress?.bookmarked ? "Remove from favorites" : "Add to favorites"}
                                 aria-pressed={Boolean(progress?.bookmarked)}
-                                className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs transition-all ${
+                                className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                                     progress?.bookmarked
                                         ? "bg-yellow-400/10 text-warning"
                                         : "text-muted-foreground hover:bg-accent hover:text-warning"
@@ -265,7 +263,7 @@ const QuestionTable = ({
                                 onClick={() => requireProgressOrRun(() => onToggleRevision(q))}
                                 title="Toggle revision"
                                 aria-label={progress?.inRevisionList ? "Remove from revision list" : "Add to revision list"}
-                                className={`cursor-pointer inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-all ${
+                                className={`cursor-pointer inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                                     progress?.inRevisionList
                                         ? "bg-cyan-500/20 text-cyan-400"
                                         : "text-muted-foreground hover:bg-accent hover:text-cyan-400"
