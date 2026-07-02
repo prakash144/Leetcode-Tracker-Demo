@@ -13,8 +13,8 @@ const colorMap: Record<string, string> = {
 };
 
 const sizeMap: Record<string, string> = {
-  sm: "px-1.5 py-0.5 text-xs",
-  md: "px-2 py-1 text-sm",
+  sm: "px-2 py-0.5 text-xs",
+  md: "px-2.5 py-1 text-sm",
 };
 
 const DifficultyBadge = memo(function DifficultyBadge({
@@ -26,7 +26,7 @@ const DifficultyBadge = memo(function DifficultyBadge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border font-medium ${color} ${sizeMap[size]} ${className}`}
+      className={`inline-flex items-center justify-center rounded-full border font-medium min-w-[72px] text-center ${color} ${sizeMap[size]} ${className}`}
     >
       {difficulty}
     </span>

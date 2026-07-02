@@ -73,6 +73,7 @@ const ProblemCardList = ({
                   title={isBookmarked ? "Remove from favorites" : "Add to favorites"}
                   aria-label={isBookmarked ? "Remove from favorites" : "Add to favorites"}
                   aria-pressed={isBookmarked}
+                  className="cursor-pointer"
                 >
                   <Star
                     className={`size-4 ${isBookmarked ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground hover:text-warning"}`}
@@ -94,7 +95,7 @@ const ProblemCardList = ({
                 onClick={() => requireProgressOrRun(() => onToggleSolved(q))}
                 title={isSolved ? "Mark as unsolved" : "Mark as solved"}
                 aria-pressed={isSolved}
-                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
+                className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                   isSolved
                     ? "bg-success/20 text-success"
                     : "bg-secondary text-muted-foreground hover:bg-accent"
@@ -107,7 +108,7 @@ const ProblemCardList = ({
                 onClick={() => requireProgressOrRun(() => onToggleAttempted(q))}
                 title={isAttempted ? "Remove attempt" : "Mark attempted"}
                 aria-pressed={isAttempted}
-                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
+                className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                   isAttempted
                     ? "bg-blue-500/20 text-blue-300"
                     : "bg-secondary text-muted-foreground hover:bg-accent"
@@ -120,7 +121,7 @@ const ProblemCardList = ({
                 onClick={() => requireProgressOrRun(() => onToggleRevision(q))}
                 title={isRevision ? "Remove from revision" : "Add to revision"}
                 aria-pressed={isRevision}
-                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
+                className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                   isRevision
                     ? "bg-cyan-500/20 text-cyan-300"
                     : "bg-secondary text-muted-foreground hover:bg-accent"

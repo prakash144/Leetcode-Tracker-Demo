@@ -41,14 +41,21 @@ const NotesDialog = ({
         onSave(problem, draft);
     };
 
+    const hasNotes = notes.trim().length > 0;
+
     return (
         <Dialog.Root onOpenChange={handleOpenChange}>
             <Dialog.Trigger asChild>
                 <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 text-xs text-foreground hover:text-foreground border border-border bg-secondary hover:bg-accent"
+                    className={`h-8 text-xs border transition-all ${
+                        hasNotes
+                            ? "border-success/50 bg-success/10 text-success hover:bg-success/20 hover:text-success"
+                            : "text-foreground hover:text-foreground border-border bg-secondary hover:bg-accent"
+                    }`}
                 >
+                    {hasNotes && <span className="size-1.5 rounded-full bg-success animate-pulse" />}
                     Notes
                 </Button>
             </Dialog.Trigger>

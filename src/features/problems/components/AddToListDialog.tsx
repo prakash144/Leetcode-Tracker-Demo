@@ -82,7 +82,7 @@ const AddToListDialog = ({
       <DialogTrigger asChild>
         <button
           type="button"
-          className="group relative inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all border border-transparent hover:border-border/60 hover:bg-accent/60 hover:text-card-foreground text-muted-foreground"
+          className="group relative inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all border border-transparent hover:border-border/60 hover:bg-accent/60 hover:text-card-foreground text-muted-foreground"
           aria-label={`Add ${problemTitle} to list`}
         >
           <ListPlus className="size-3.5 transition-transform group-hover:scale-110" />

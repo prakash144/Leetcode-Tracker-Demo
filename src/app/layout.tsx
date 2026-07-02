@@ -13,12 +13,15 @@ const geistMono = Geist_Mono({
     subsets: ["latin"],
 });
 
+const isProd = process.env.NODE_ENV === "production";
+const basePath = isProd ? "/Interview-Tracly" : "";
+
 export const metadata: Metadata = {
     metadataBase: new URL("https://prakash144.github.io/Interview-Tracly"),
     title: "Interview Tracly",
     description: "Track your journey. Crack your dream company. 🚀",
     icons: {
-        icon: "/icon.svg",
+        icon: `${basePath}/icon.svg`,
     },
     openGraph: {
         title: "Interview Tracly",
@@ -28,7 +31,7 @@ export const metadata: Metadata = {
         siteName: "Interview Tracly",
         images: [
             {
-                url: "/icon.svg",
+                url: `${basePath}/icon.svg`,
                 width: 100,
                 height: 100,
                 alt: "Interview Tracly",
@@ -39,7 +42,7 @@ export const metadata: Metadata = {
         card: "summary_large_image",
         title: "Interview Tracly",
         description: "Track your journey. Crack your dream company. 🚀",
-        images: ["/icon.svg"],
+        images: [`${basePath}/icon.svg`],
     },
 };
 
@@ -54,6 +57,7 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
         <head>
             <link rel="manifest" href="/manifest.json" />
+            <link rel="icon" href={`${basePath}/favicon.svg`} type="image/svg+xml" />
             <meta name="theme-color" content="#22c55e" />
             <script dangerouslySetInnerHTML={{ __html: FLASH_SCRIPT }} />
         </head>
