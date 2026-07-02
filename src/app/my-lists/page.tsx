@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   ExternalLink,
   FolderKanban,
@@ -231,10 +232,10 @@ className="bg-success text-primary-foreground hover:bg-success/90"
                         size="sm"
                         className="border-border bg-secondary text-card-foreground hover:bg-accent h-7 text-xs"
                       >
-                        <a href="/problems" className="inline-flex items-center gap-1.5">
+                        <Link href="/problems" className="inline-flex items-center gap-1.5">
                           <ExternalLink className="size-3" />
                           Open Problems
-                        </a>
+                        </Link>
                       </Button>
                     </div>
                   </div>

@@ -99,7 +99,7 @@ const ProgressPage = () => {
       result = result.filter((e) => e.problem.title.toLowerCase().includes(q));
     }
     if (difficultyFilter !== "all") {
-      result = result.filter((e) => e.problem.difficulty === difficultyFilter);
+      result = result.filter((e) => e.problem.difficulty.toLowerCase() === difficultyFilter.toLowerCase());
     }
     if (statusFilter === "solved") {
       result = result.filter((e) => e.progress.solved);

@@ -61,6 +61,13 @@ export const useCustomLists = (uid?: string | null) => {
     async (listId: string, problemId: string) => {
       if (!uid) return;
       await listService.addProblemToList(uid, listId, problemId);
+      setLists((prev) =>
+        prev.map((list) =>
+          list.id === listId
+            ? { ...list, problemIds: [...list.problemIds, problemId] }
+            : list
+        )
+      );
     },
     [uid]
   );
@@ -69,6 +76,13 @@ export const useCustomLists = (uid?: string | null) => {
     async (listId: string, problemId: string) => {
       if (!uid) return;
       await listService.removeProblemFromList(uid, listId, problemId);
+      setLists((prev) =>
+        prev.map((list) =>
+          list.id === listId
+            ? { ...list, problemIds: list.problemIds.filter((id) => id !== problemId) }
+            : list
+        )
+      );
     },
     [uid]
   );
